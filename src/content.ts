@@ -8,6 +8,7 @@ export const JS_FILENAME = 'cursor-chat-rtl.js';
 
 /** Mode marker inside CSS (for status / upgrades) */
 export const RTL_MODE_ACTIVE_MARKER = '/* RTL-MODE: active */';
+export const RTL_VERSION_MARKER = '/* RTL-VERSION: 1.0.0-persian */';
 
 const BODY_CLASS = 'cursor-chat-rtl';
 const BTN_ID = 'cursor-rtl-toggle-btn';
@@ -84,36 +85,79 @@ ${p}.interactive-input-editor .view-lines {
 `;
 }
 
+/** Shared block/inline RTL rules for composer agent markdown containers. */
+function rtlComposerTextBlocks(p: string, container: string): string {
+    return `
+${p}${container} {
+    direction: rtl !important;
+    unicode-bidi: plaintext !important;
+}
+
+${p}${container} :is(p, ul, ol, li, h1, h2, h3, h4, h5, h6, blockquote, div) {
+    text-align: right !important;
+    unicode-bidi: plaintext !important;
+}
+
+${p}${container} a {
+    unicode-bidi: plaintext !important;
+}
+`;
+}
+
 /**
- * Cursor Composer / Agent pane (`.composer-rendered-message`, `.markdown-root`, human bubble editors).
+ * Cursor Composer / Agent pane — legacy `.markdown-root` and new Lexical DOM
+ * (`.markdown-lexical-editor-container`, `.markdown-section`).
  * @param p - selector prefix including trailing space
  */
 function rtlComposerMarkdown(p: string): string {
-    return `
-/* --- TEXT: RTL (Cursor Composer) --- */
+    const agentContainers = [
+        '.composer-rendered-message .markdown-root',
+        '.composer-rendered-message .markdown-lexical-editor-container',
+        '.composer-rendered-message .markdown-section',
+        '.composer-rendered-message .markdown-lexical-editor-container .markdown-section',
+    ];
 
-${p}.composer-rendered-message .markdown-root {
+    const agentCss = agentContainers.map(c => rtlComposerTextBlocks(p, c)).join('\n');
+
+    return `
+/* --- TEXT: RTL (Cursor Composer / Agent) --- */
+
+${agentCss}
+
+${p}.composer-rendered-message [dir="ltr"]:not(.monaco-editor):not(.markdown-lexical-editor-code-block):not(.composer-code-block-container *) {
     direction: rtl !important;
     unicode-bidi: plaintext !important;
-}
-
-${p}.composer-rendered-message .markdown-root :is(p, ul, ol, li, h1, h2, h3, h4, blockquote) {
     text-align: right !important;
-    unicode-bidi: embed !important;
-}
-
-${p}.composer-rendered-message .markdown-root a {
-    unicode-bidi: plaintext !important;
 }
 
 ${p}.composer-human-message-container .composer-human-message,
-${p}.composer-human-message .aislash-editor-input-readonly {
+${p}.composer-human-message .aislash-editor-input-readonly,
+${p}.composer-human-message .aislash-editor-input {
     direction: rtl !important;
     unicode-bidi: plaintext !important;
 }
 
-${p}.composer-human-message-container .aislash-editor-input-readonly {
+${p}.composer-human-message-container .aislash-editor-input-readonly,
+${p}.composer-human-message .aislash-editor-input-readonly p,
+${p}.composer-human-message .aislash-editor-input p {
     text-align: right !important;
+    unicode-bidi: plaintext !important;
+}
+
+${p}.ui-prompt-input-editor__input,
+${p}.ui-prompt-input-tiptap-readonly__content,
+${p}.ui-prompt-input-editor__input > p,
+${p}.ui-prompt-input-tiptap-readonly__content > p {
+    unicode-bidi: plaintext !important;
+    text-align: start !important;
+}
+
+${p}.markdown-lexical-editor-container ul,
+${p}.markdown-lexical-editor-container ol,
+${p}.markdown-section ul,
+${p}.markdown-section ol {
+    padding-inline-start: 20px !important;
+    padding-inline-end: 0 !important;
 }
 `;
 }
@@ -145,15 +189,22 @@ ${p}code {
 }
 
 ${p}.chat-markdown-part.rendered-markdown table,
-${p}.composer-rendered-message .markdown-root table {
+${p}.composer-rendered-message .markdown-root table,
+${p}.composer-rendered-message .markdown-lexical-editor-container table,
+${p}.composer-rendered-message .markdown-section table {
     direction: rtl !important;
 }
 
 ${p}.chat-markdown-part.rendered-markdown table th,
 ${p}.chat-markdown-part.rendered-markdown table td,
 ${p}.composer-rendered-message .markdown-root table th,
-${p}.composer-rendered-message .markdown-root table td {
+${p}.composer-rendered-message .markdown-root table td,
+${p}.composer-rendered-message .markdown-lexical-editor-container table th,
+${p}.composer-rendered-message .markdown-lexical-editor-container table td,
+${p}.composer-rendered-message .markdown-section table th,
+${p}.composer-rendered-message .markdown-section table td {
     text-align: right !important;
+    unicode-bidi: plaintext !important;
 }
 
 ${p}.chat-thinking-box {
@@ -208,7 +259,10 @@ ${p}.composer-diff-block,
 ${p}.composer-tool-former-message,
 ${p}.composer-terminal-output,
 ${p}.composer-tool-call-container,
-${p}.ui-step-group-header {
+${p}.ui-step-group-header,
+${p}.markdown-lexical-editor-code-block,
+${p}.markdown-code-outer-container,
+${p}.cursor-code-block-content {
     direction: ltr !important;
     unicode-bidi: isolate !important;
     text-align: left !important;
@@ -225,6 +279,7 @@ ${p}.composer-message-codeblock {
 /** The CSS injected for active mode (toggle ⇄ + body class) */
 export const RTL_CSS = `/* === CURSOR-CHAT-RTL-START === */
 ${RTL_MODE_ACTIVE_MARKER}
+${RTL_VERSION_MARKER}
 ${BUTTON_CSS}
 
 ${rtlLegacyMarkdown(`body.${BODY_CLASS} `)}
@@ -233,34 +288,81 @@ ${ltrOverrides(`body.${BODY_CLASS} `)}
 /* === CURSOR-CHAT-RTL-END === */
 `;
 
-/** Toggle + localStorage JS */
+/** Toggle + localStorage JS + agent message DOM scanner for streaming content */
 export const RTL_JS = `/* === CURSOR-CHAT-RTL-JS active === */
 (function() {
     var BTN_ID = '${BTN_ID}';
     var BODY_CLASS = '${BODY_CLASS}';
     var STORAGE_KEY = 'cursor-chat-rtl-active';
 
-    // Anchor every lookup inside the Cursor chat/agent panel so the ⇄ button
-    // can never land next to a "+" in Terminal, editor tabs, or other panels.
     var CHAT_PANEL_SELECTOR = '#workbench\\\\.parts\\\\.auxiliarybar';
 
-    // Toolbar containers, newest layout first, older fallback second.
     var TOOLBAR_SELECTORS = [
         '.editor-actions .monaco-action-bar > ul.actions-container[aria-label="Editor actions"]',
         '.auxiliary-bar-title-hide-toolbar .monaco-action-bar > ul.actions-container[role="toolbar"]'
     ];
 
-    // Chat-specific command IDs for the "New Chat/Agent" button we anchor next to.
-    // Each must be unique to Cursor chat — never reuse a generic id like a plain "add".
     var NEW_CHAT_COMMAND_IDS = [
         'composer.createNewComposerTab',
         'auxiliaryBar.newAgentMenu'
     ];
 
+    var AGENT_ROOT_SELECTORS = [
+        '.composer-rendered-message .markdown-lexical-editor-container',
+        '.composer-rendered-message .markdown-section',
+        '.composer-rendered-message .markdown-root'
+    ];
+
+    var AGENT_TEXT_SELECTORS = [
+        '.composer-rendered-message .markdown-lexical-editor-container p',
+        '.composer-rendered-message .markdown-lexical-editor-container li',
+        '.composer-rendered-message .markdown-lexical-editor-container h1',
+        '.composer-rendered-message .markdown-lexical-editor-container h2',
+        '.composer-rendered-message .markdown-lexical-editor-container h3',
+        '.composer-rendered-message .markdown-lexical-editor-container h4',
+        '.composer-rendered-message .markdown-lexical-editor-container blockquote',
+        '.composer-rendered-message .markdown-section p',
+        '.composer-rendered-message .markdown-section li',
+        '.composer-rendered-message .markdown-root p',
+        '.composer-rendered-message .markdown-root li'
+    ];
+
+    var CODE_EXCLUDE = 'code, pre, .monaco-editor, .markdown-lexical-editor-code-block, .composer-code-block-container, .markdown-code-outer-container';
+
+    function isRtlActive() {
+        return document.body && document.body.classList.contains(BODY_CLASS);
+    }
+
     function applyBodyClassFromStorage() {
         if (!document.body) return;
         if (localStorage.getItem(STORAGE_KEY) === 'true') {
             document.body.classList.add(BODY_CLASS);
+        }
+    }
+
+    function isExcluded(el) {
+        return el && el.closest && !!el.closest(CODE_EXCLUDE);
+    }
+
+    function applyAgentRtl() {
+        if (!isRtlActive()) return;
+
+        for (var i = 0; i < AGENT_ROOT_SELECTORS.length; i++) {
+            var roots = document.querySelectorAll(AGENT_ROOT_SELECTORS[i]);
+            for (var j = 0; j < roots.length; j++) {
+                var root = roots[j];
+                if (isExcluded(root)) continue;
+                root.setAttribute('dir', 'rtl');
+            }
+        }
+
+        for (var k = 0; k < AGENT_TEXT_SELECTORS.length; k++) {
+            var nodes = document.querySelectorAll(AGENT_TEXT_SELECTORS[k]);
+            for (var m = 0; m < nodes.length; m++) {
+                var node = nodes[m];
+                if (isExcluded(node)) continue;
+                node.setAttribute('dir', 'rtl');
+            }
         }
     }
 
@@ -308,7 +410,7 @@ export const RTL_JS = `/* === CURSOR-CHAT-RTL-JS active === */
         btn.setAttribute('role', 'button');
         btn.setAttribute('tabindex', '0');
 
-        if (document.body.classList.contains(BODY_CLASS)) {
+        if (isRtlActive()) {
             btn.classList.add('cursor-rtl-active');
         }
 
@@ -317,19 +419,50 @@ export const RTL_JS = `/* === CURSOR-CHAT-RTL-JS active === */
             var isActive = document.body.classList.toggle(BODY_CLASS);
             btn.classList.toggle('cursor-rtl-active', isActive);
             localStorage.setItem(STORAGE_KEY, isActive ? 'true' : 'false');
+            if (isActive) {
+                applyAgentRtl();
+            }
         });
 
         li.appendChild(btn);
         firstLi.insertAdjacentElement('afterend', li);
     }
 
+    var scanTimer = null;
+    function scheduleAgentRtlScan() {
+        if (!isRtlActive()) return;
+        if (scanTimer) return;
+        scanTimer = setTimeout(function() {
+            scanTimer = null;
+            applyAgentRtl();
+        }, 50);
+    }
+
+    function attachObserver(root) {
+        if (!root) return;
+        var observer = new MutationObserver(function() {
+            tryInsertButton();
+            scheduleAgentRtlScan();
+        });
+        observer.observe(root, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+
     function start() {
         applyBodyClassFromStorage();
         tryInsertButton();
-        var observer = new MutationObserver(function() {
-            tryInsertButton();
-        });
-        observer.observe(document.body, { childList: true, subtree: true });
+        applyAgentRtl();
+        attachObserver(document.body);
+
+        var all = document.querySelectorAll('*');
+        for (var i = 0; i < all.length; i++) {
+            if (all[i].shadowRoot) {
+                attachObserver(all[i].shadowRoot);
+            }
+        }
     }
 
     if (document.readyState !== 'loading') {

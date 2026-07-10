@@ -7,11 +7,30 @@ import {
     HTML_LINK_MARKER,
     CSS_FILENAME,
     JS_FILENAME,
-    RTL_CSS,
-    RTL_JS,
     RTL_MODE_ACTIVE_MARKER,
 } from './content.js';
 import { exists } from './utils.js';
+
+let extensionResourceDir: string | undefined;
+
+export function setExtensionResourceDir(dir: string): void {
+    extensionResourceDir = dir;
+}
+
+async function loadRtlAssets(): Promise<{ css: string; js: string }> {
+    if (extensionResourceDir) {
+        const cssPath = path.join(extensionResourceDir, 'resources', CSS_FILENAME);
+        const jsPath = path.join(extensionResourceDir, 'resources', JS_FILENAME);
+        if (await exists(cssPath) && await exists(jsPath)) {
+            return {
+                css: await fs.readFile(cssPath, 'utf-8'),
+                js: await fs.readFile(jsPath, 'utf-8'),
+            };
+        }
+    }
+    const { RTL_CSS, RTL_JS } = await import('./content.js');
+    return { css: RTL_CSS, js: RTL_JS };
+}
 
 async function isWritable(dir: string): Promise<boolean> {
     try {
@@ -120,8 +139,9 @@ async function restoreProductJson(installation: CursorInstallation, messages: st
 async function writeAssets(installation: CursorInstallation, messages: string[]): Promise<void> {
     const cssPath = path.join(installation.workbenchDir, CSS_FILENAME);
     const jsPath = path.join(installation.workbenchDir, JS_FILENAME);
-    await fs.writeFile(cssPath, RTL_CSS, 'utf-8');
-    await fs.writeFile(jsPath, RTL_JS, 'utf-8');
+    const { css, js } = await loadRtlAssets();
+    await fs.writeFile(cssPath, css, 'utf-8');
+    await fs.writeFile(jsPath, js, 'utf-8');
     messages.push(`  CSS/JS: Written to ${installation.workbenchDir}`);
 }
 
@@ -322,11 +342,13 @@ export async function reinjectAssets(
         const cssPath = path.join(installation.workbenchDir, CSS_FILENAME);
         const jsPath = path.join(installation.workbenchDir, JS_FILENAME);
 
+        const { css, js } = await loadRtlAssets();
+
         let cssMatch = false;
         let jsMatch = false;
         try {
-            cssMatch = (await fs.readFile(cssPath, 'utf-8')) === RTL_CSS;
-            jsMatch = (await fs.readFile(jsPath, 'utf-8')) === RTL_JS;
+            cssMatch = (await fs.readFile(cssPath, 'utf-8')) === css;
+            jsMatch = (await fs.readFile(jsPath, 'utf-8')) === js;
         } catch { /* file missing — will be written */ }
 
         if (cssMatch && jsMatch) {
@@ -334,8 +356,8 @@ export async function reinjectAssets(
             return { messages, changed: false };
         }
 
-        await fs.writeFile(cssPath, RTL_CSS, 'utf-8');
-        await fs.writeFile(jsPath, RTL_JS, 'utf-8');
+        await fs.writeFile(cssPath, css, 'utf-8');
+        await fs.writeFile(jsPath, js, 'utf-8');
         messages.push(`  CSS/JS: Re-written to ${installation.workbenchDir}`);
         return { messages, changed: true };
     } catch (e: unknown) {

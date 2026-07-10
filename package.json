@@ -1,17 +1,21 @@
 {
-  "name": "cursor-chat-rtl",
-  "displayName": "Cursor Chat RTL Support",
-  "description": "Adds an ⇄ toggle button to Cursor IDE chat for Hebrew, Arabic, and Persian, switching messages to right-aligned RTL via CSS while keeping code blocks and UI in LTR. Patches Cursor workbench files (not VS Code). Restart Cursor after activation.",
-  "version": "0.1.6",
-  "publisher": "yechielby",
+  "name": "cursor-chat-rtl-persian",
+  "displayName": "Cursor Chat RTL — Persian",
+  "description": "RTL support for Cursor Agent chat (Persian, Arabic, Hebrew). Two toolbar toggles: ⇄ for chat text, code icon for code blocks & Monaco in chat. Patches Cursor workbench.",
+  "version": "1.1.0",
+  "publisher": "alifath",
+  "author": {
+    "name": "ALI FATHNEJAT",
+    "email": ""
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/YechielBy/cursor-chat-rtl-extension"
+    "url": "https://github.com/alifath/cursor-chat-rtl-persian"
   },
-  "homepage": "https://github.com/yechielby/cursor-chat-rtl-extension#readme",
+  "homepage": "https://github.com/alifath/cursor-chat-rtl-persian#readme",
   "bugs": {
-    "url": "https://github.com/yechielby/cursor-chat-rtl-extension/issues"
+    "url": "https://github.com/alifath/cursor-chat-rtl-persian/issues"
   },
   "engines": {
     "vscode": "^1.94.0"
@@ -22,41 +26,46 @@
   "keywords": [
     "arabic",
     "bidi",
-    "bidirectional",
-    "chat-rtl",
     "cursor",
-    "cursor-app",
-    "cursor-ai",
     "cursor-chat",
-    "cursor-ide",
-    "cursor-only",
+    "cursor-agent",
     "farsi",
     "hebrew",
     "persian",
-    "right-to-left",
     "rtl",
-    "text-direction",
-    "toggle-rtl",
-    "rtl-support"
+    "rtl-support",
+    "agent-chat"
   ],
   "activationEvents": [
     "onStartupFinished"
   ],
   "icon": "cursor-chat-rtl-logo.png",
+  "galleryBanner": {
+    "color": "#1e1e2e",
+    "theme": "dark"
+  },
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "cursor-rtl.add",
-        "title": "Cursor Chat RTL: Activate"
+        "command": "cursor-rtl-persian.add",
+        "title": "Cursor RTL Persian: Activate"
       },
       {
-        "command": "cursor-rtl.remove",
-        "title": "Cursor Chat RTL: Deactivate"
+        "command": "cursor-rtl-persian.remove",
+        "title": "Cursor RTL Persian: Deactivate"
       },
       {
-        "command": "cursor-rtl.status",
-        "title": "Cursor Chat RTL: Check Status"
+        "command": "cursor-rtl-persian.status",
+        "title": "Cursor RTL Persian: Check Status"
+      },
+      {
+        "command": "cursor-rtl-persian.reapply",
+        "title": "Cursor RTL Persian: Re-apply After Cursor Update"
+      },
+      {
+        "command": "cursor-rtl-persian.toggle",
+        "title": "Cursor RTL Persian: Toggle"
       }
     ]
   },

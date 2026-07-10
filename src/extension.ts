@@ -4,12 +4,12 @@
  */
 import * as vscode from 'vscode';
 import { findCursorInstallations } from './finder.js';
-import { addRtl, removeRtl, getStatus, reinjectAssets, isFullyInstalled } from './injector.js';
+import { addRtl, removeRtl, getStatus, reinjectAssets, isFullyInstalled, setExtensionResourceDir } from './injector.js';
 import type { RtlMode } from './types.js';
 import { createStatusBarItem, updateStatusBar, disposeStatusBar } from './statusBar.js';
 
-const STATE_MODE_KEY = 'cursorRtl.mode';
-const STATE_VERSION_KEY = 'cursorRtl.version';
+const STATE_MODE_KEY = 'cursorRtlPersian.mode';
+const STATE_VERSION_KEY = 'cursorRtlPersian.version';
 
 let outputChannel: vscode.OutputChannel;
 let globalState: vscode.Memento;
@@ -17,7 +17,7 @@ let currentVersion: string;
 
 function getOutputChannel(): vscode.OutputChannel {
     if (!outputChannel) {
-        outputChannel = vscode.window.createOutputChannel('Cursor Chat RTL');
+        outputChannel = vscode.window.createOutputChannel('Cursor RTL Persian');
     }
     return outputChannel;
 }
@@ -38,7 +38,7 @@ async function promptRestartIfChanged(changed: boolean): Promise<void> {
     if (!changed) return;
     await updateStatusBar();
     const action = await vscode.window.showInformationMessage(
-        'Cursor Chat RTL: Changes will take effect after restarting Cursor.',
+        'Cursor RTL Persian: Changes will take effect after restarting Cursor.',
         'Quit Now',
         'Later',
     );
@@ -56,7 +56,7 @@ async function handleActivate(): Promise<void> {
 
     const channel = getOutputChannel();
     channel.clear();
-    channel.appendLine('Activating Cursor Chat RTL...\n');
+    channel.appendLine('Activating Cursor RTL Persian...\n');
 
     let anyChanged = false;
     for (const inst of installations) {
@@ -77,9 +77,9 @@ async function handleActivate(): Promise<void> {
         const alreadyInstalled = statuses.some(s => s.isInstalled);
         if (alreadyInstalled) {
             await saveMode('active');
-            vscode.window.showInformationMessage('Cursor Chat RTL is already active.');
+            vscode.window.showInformationMessage('Cursor RTL Persian is already active.');
         } else {
-            vscode.window.showWarningMessage('Cursor Chat RTL: Activation failed. Check Output for details.');
+            vscode.window.showWarningMessage('Cursor RTL Persian: Activation failed. Check Output for details.');
         }
     }
 }
@@ -93,7 +93,7 @@ async function handleRemove(): Promise<void> {
 
     const channel = getOutputChannel();
     channel.clear();
-    channel.appendLine('Deactivating Cursor Chat RTL...\n');
+    channel.appendLine('Deactivating Cursor RTL Persian...\n');
 
     let anyChanged = false;
     for (const inst of installations) {
@@ -114,9 +114,9 @@ async function handleRemove(): Promise<void> {
         const stillInstalled = statuses.some(s => s.isInstalled);
         if (!stillInstalled) {
             await saveMode('inactive');
-            vscode.window.showInformationMessage('Cursor Chat RTL is already inactive.');
+            vscode.window.showInformationMessage('Cursor RTL Persian is already inactive.');
         } else {
-            vscode.window.showWarningMessage('Cursor Chat RTL: Deactivation failed. Check Output for details.');
+            vscode.window.showWarningMessage('Cursor RTL Persian: Deactivation failed. Check Output for details.');
         }
     }
 }
@@ -236,21 +236,21 @@ async function handleToggle(): Promise<void> {
 
     if (isOn) {
         const answer = await vscode.window.showInformationMessage(
-            'Cursor Chat RTL is active. Do you want to turn it off?',
+            'Cursor RTL Persian is active. Do you want to turn it off?',
             'Turn Off',
             'Cancel',
         );
         if (answer === 'Turn Off') {
-            await vscode.commands.executeCommand('cursor-rtl.remove');
+            await vscode.commands.executeCommand('cursor-rtl-persian.remove');
         }
     } else {
         const answer = await vscode.window.showInformationMessage(
-            'Cursor Chat RTL is inactive. Do you want to turn it on?',
+            'Cursor RTL Persian is inactive. Do you want to turn it on?',
             'Turn On',
             'Cancel',
         );
         if (answer === 'Turn On') {
-            await vscode.commands.executeCommand('cursor-rtl.add');
+            await vscode.commands.executeCommand('cursor-rtl-persian.add');
         }
     }
 }
@@ -258,17 +258,18 @@ async function handleToggle(): Promise<void> {
 export function activate(context: vscode.ExtensionContext): void {
     globalState = context.globalState;
     currentVersion = context.extension.packageJSON.version ?? '0.0.0';
+    setExtensionResourceDir(context.extension.extensionPath);
 
-    const explained = globalState.get<boolean>('cursorRtl.usageExplained');
+    const explained = globalState.get<boolean>('cursorRtlPersian.usageExplained');
     if (!explained) {
-        void globalState.update('cursorRtl.usageExplained', true);
+        void globalState.update('cursorRtlPersian.usageExplained', true);
         const ch = getOutputChannel();
-        ch.appendLine('Cursor Chat RTL — what this does');
+        ch.appendLine('Cursor RTL Persian — what this does');
         ch.appendLine('This extension patches Cursor\u2019s own workbench files on disk (workbench.html + CSS/JS).');
-        ch.appendLine('Installing the extension alone does nothing until you run a command.');
+        ch.appendLine('Includes fix for Agent messages (markdown-lexical-editor-container) in new Cursor versions.');
         ch.appendLine('');
-        ch.appendLine('Steps: Command Palette (Ctrl+Shift+P) → "Cursor Chat RTL: Activate" → then fully quit Cursor and reopen (Reload Window is not always enough).');
-        ch.appendLine('Then open Output → "Cursor Chat RTL" if a command fails (e.g. permission denied).');
+        ch.appendLine('Steps: Command Palette (Ctrl+Shift+P) \u2192 "Cursor RTL Persian: Activate" \u2192 fully quit Cursor and reopen.');
+        ch.appendLine('Then open Output \u2192 "Cursor RTL Persian" if a command fails (e.g. permission denied).');
         ch.appendLine('');
     }
 
@@ -276,10 +277,13 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(statusBar);
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('cursor-rtl.add', handleActivate),
-        vscode.commands.registerCommand('cursor-rtl.remove', handleRemove),
-        vscode.commands.registerCommand('cursor-rtl.status', handleStatus),
-        vscode.commands.registerCommand('cursor-rtl.toggle', handleToggle),
+        vscode.commands.registerCommand('cursor-rtl-persian.add', handleActivate),
+        vscode.commands.registerCommand('cursor-rtl-persian.remove', handleRemove),
+        vscode.commands.registerCommand('cursor-rtl-persian.status', handleStatus),
+        vscode.commands.registerCommand('cursor-rtl-persian.reapply', async () => {
+            await promptRestartIfChanged(await silentReinjectVersion());
+        }),
+        vscode.commands.registerCommand('cursor-rtl-persian.toggle', handleToggle),
     );
 
     autoReactivate().catch(err => console.error('Cursor RTL auto-reactivate failed:', err));

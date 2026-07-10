@@ -1,0 +1,152 @@
+﻿/* === CURSOR-CHAT-RTL-START === */
+/* RTL-MODE: active */
+/* RTL-VERSION: 1.1.0-alifath */
+/* By ALI FATHNEJAT — fork of yechielby/cursor-chat-rtl-extension */
+
+/* ==========================================
+   Toolbar toggle buttons
+   ========================================== */
+#cursor-rtl-toggle-btn,
+#cursor-rtl-code-toggle-btn {
+    font-size: 14px !important;
+    font-weight: bold !important;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--vscode-foreground);
+    opacity: 0.5;
+    transition: opacity 0.2s, background 0.2s;
+    flex-shrink: 0;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none !important;
+}
+
+#cursor-rtl-toggle-btn:hover,
+#cursor-rtl-code-toggle-btn:hover { opacity: 1; }
+
+#cursor-rtl-toggle-btn.cursor-rtl-active,
+#cursor-rtl-code-toggle-btn.cursor-rtl-code-active {
+    opacity: 1;
+    background: var(--vscode-button-background, rgba(128, 128, 128, 0.3));
+}
+
+/* Code button uses VS Code codicon */
+#cursor-rtl-code-toggle-btn.codicon::before {
+    font-size: 16px !important;
+}
+
+/* ==========================================
+   Chat text RTL (⇄ button)
+   ========================================== */
+body.cursor-chat-rtl [data-cursor-rtl][dir="rtl"] {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: plaintext !important;
+}
+
+body.cursor-chat-rtl ul[data-cursor-rtl][dir="rtl"],
+body.cursor-chat-rtl ol[data-cursor-rtl][dir="rtl"] {
+    padding-inline-start: 22px !important;
+    padding-inline-end: 0 !important;
+}
+
+body.cursor-chat-rtl [data-cursor-rtl][dir="rtl"] strong,
+body.cursor-chat-rtl [data-cursor-rtl][dir="rtl"] em,
+body.cursor-chat-rtl [data-cursor-rtl][dir="rtl"] b,
+body.cursor-chat-rtl [data-cursor-rtl][dir="rtl"] i {
+    unicode-bidi: isolate !important;
+}
+
+body.cursor-chat-rtl [data-cursor-rtl][dir="rtl"] code {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+    display: inline-block;
+}
+
+body.cursor-chat-rtl [data-cursor-rtl][dir="rtl"] a {
+    unicode-bidi: plaintext !important;
+}
+
+/* Chat prompt input */
+body.cursor-chat-rtl .aislash-editor-input p,
+body.cursor-chat-rtl .aislash-editor-input-readonly p,
+body.cursor-chat-rtl .composer-human-message p,
+body.cursor-chat-rtl .ui-prompt-input-editor__input,
+body.cursor-chat-rtl .ui-prompt-input-editor__input > p,
+body.cursor-chat-rtl .ui-prompt-input-tiptap-readonly__content,
+body.cursor-chat-rtl .ui-prompt-input-tiptap-readonly__content > p {
+    unicode-bidi: plaintext !important;
+    text-align: start !important;
+}
+
+body.cursor-chat-rtl .aislash-editor-placeholder {
+    right: 15px !important;
+    left: auto !important;
+}
+
+/* Default: code blocks stay LTR unless code toggle is on */
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .monaco-editor,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message pre,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .markdown-lexical-editor-code-block,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-code-block-container,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .markdown-code-outer-container,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .cursor-code-block-content,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-message-codeblock,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-diff-block,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-terminal-output,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .xterm {
+    direction: ltr !important;
+    text-align: left !important;
+}
+
+/* ==========================================
+   Code / Monaco RTL in chat (</> button)
+   Scoped to agent chat only — never file editor
+   ========================================== */
+body.cursor-chat-rtl-code .composer-rendered-message [data-cursor-rtl-code][dir="rtl"],
+body.cursor-chat-rtl-code .composer-human-message [data-cursor-rtl-code][dir="rtl"] {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: plaintext !important;
+}
+
+body.cursor-chat-rtl-code .composer-rendered-message .monaco-editor[data-cursor-rtl-code="true"] .view-lines {
+    direction: rtl !important;
+}
+
+body.cursor-chat-rtl-code .composer-rendered-message .monaco-editor[data-cursor-rtl-code="true"] .view-line {
+    text-align: right !important;
+    unicode-bidi: plaintext !important;
+}
+
+body.cursor-chat-rtl-code .composer-rendered-message .monaco-editor[data-cursor-rtl-code="true"] .view-line > span {
+    direction: rtl !important;
+}
+
+body.cursor-chat-rtl-code .composer-rendered-message .monaco-editor[data-cursor-rtl-code="true"] .scrollbar.vertical {
+    left: 0 !important;
+    right: auto !important;
+}
+
+body.cursor-chat-rtl-code .composer-rendered-message pre[data-cursor-rtl-code],
+body.cursor-chat-rtl-code .composer-rendered-message .markdown-lexical-editor-code-block[data-cursor-rtl-code],
+body.cursor-chat-rtl-code .composer-code-block-container[data-cursor-rtl-code],
+body.cursor-chat-rtl-code .markdown-code-outer-container[data-cursor-rtl-code],
+body.cursor-chat-rtl-code .cursor-code-block-content[data-cursor-rtl-code],
+body.cursor-chat-rtl-code .composer-message-codeblock[data-cursor-rtl-code] {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: plaintext !important;
+}
+
+body.cursor-chat-rtl-code .composer-rendered-message pre[data-cursor-rtl-code] code {
+    direction: inherit !important;
+    text-align: inherit !important;
+}
+
+/* === CURSOR-CHAT-RTL-END === */

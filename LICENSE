@@ -1,6 +1,10 @@
 MIT License
 
-Copyright (c) 2024 Cursor Chat RTL Support
+Copyright (c) 2026 ALI FATHNEJAT
+Copyright (c) 2024 Yechiel Bar-Yehuda (original cursor-chat-rtl-extension)
+
+This project is a fork of https://github.com/yechielby/cursor-chat-rtl-extension
+by Yechiel Bar-Yehuda. The original work is used under the MIT License.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

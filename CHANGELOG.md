@@ -1,44 +1,77 @@
 # Changelog
 
-All notable changes to **Cursor Chat RTL Support** will be documented in this file.
+All notable changes to **Cursor Chat RTL — Persian** are documented here.
 
-## [0.1.6] - 2026-04-19
+Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+---
+
+## [1.1.0] — 2026-07-10
+
+### Added
+- **Code RTL toggle** (`</>` codicon button) next to the ⇄ text toggle
+  - Applies RTL to code blocks and Monaco editors **inside agent chat only**
+  - Does not affect the main file editor or Plan files
+  - State persisted in `localStorage` (`cursor-chat-rtl-code-active`)
+- Project rebranded under **ALI FATHNEJAT** (`alifath` publisher)
+- Full README, CHANGELOG, and marketplace metadata for GitHub / Open VSX
+
+### Credits
+- Built on [yechielby/cursor-chat-rtl-extension](https://github.com/yechielby/cursor-chat-rtl-extension) — thank you Yechiel Bar-Yehuda for the original workbench-patching approach and ⇄ toggle concept.
+
+---
+
+## [1.0.5] — 2026-07-10
 
 ### Fixed
-- Restored the ⇄ toggle button on newer Cursor builds. Recent Cursor versions moved the chat toolbar from `.auxiliary-bar-title-hide-toolbar` into `.editor-actions`, and renamed the "New Chat" command id from `auxiliaryBar.newAgentMenu` to `composer.createNewComposerTab` — the injected JS now tries the new selectors first and falls back to the old ones, so users on both old and new Cursor versions see the button.
+- **Content-based direction detection** — scans `p`, `li`, headings for Persian/Arabic/Hebrew characters instead of relying on fragile CSS class names
+- Works in sidebar chat, editor-tab chat (`chat-editor-group`), and Agents Window
+- Excludes Monaco file editor, Plan/ProseMirror, terminals, and diff blocks from text scanner
 
-### Improved
-- All DOM lookups for the toggle button are now scoped inside `#workbench.parts.auxiliarybar`, so the ⇄ button can never be injected next to a "+" in the Terminal, editor tabs, or other panels.
-- RTL body class is now applied from `localStorage` before attempting to insert the toggle button. If a future Cursor update breaks the toolbar selectors, RTL styling keeps working based on the last saved state — only the button itself is affected until the selectors are updated.
+---
 
-## [0.1.5] - 2026-03-27
-
-### Fixed
-- Backup of `workbench.html` is now refreshed every time the extension patches the IDE (including auto-reactivate on startup), ensuring the backup always matches the current Cursor version.
-- Activation / deactivation now shows a clear warning when the operation fails, instead of silently reporting success.
-
-### Improved
-- `reinjectAssets` skips re-writing CSS/JS files when on-disk content already matches, avoiding unnecessary writes and restarts.
-
-## [0.1.4] - 2026-03-26
-
-### Fixed
-- The extension now patches only the Cursor installation it is running in (`vscode.env.appRoot`), instead of scanning all installations on disk. This prevents duplicate patches when multiple Cursor versions are installed side by side.
-- Resolved `EPERM` errors caused by scanning protected directories (e.g. `Program Files` on Windows).
+## [1.0.4] — 2026-07-10
 
 ### Changed
-- Removed all platform-specific directory guessing (Windows / macOS / Linux base dirs) in favor of `vscode.env.appRoot`.
-- Added a writability check before attempting to modify IDE files.
+- Scoped selectors to `.composer-rendered-message` and `.composer-human-message` only
 
-## [0.1.0] - 2026-03-23
+### Fixed
+- Prevented accidental RTL on file editor (too narrow — fixed in 1.0.5)
 
-### Initial Release
-Cursor IDE lacks native RTL support in its chat panel — Hebrew, Arabic, and Persian text appears misaligned and hard to read. This extension fixes that by injecting CSS and a small JS toggle into Cursor's workbench files.
+---
 
-- **⇄ Toggle button** added to the Cursor chat toolbar to switch messages to right-aligned RTL.
-- **Status-bar indicator** shows the current RTL state at a glance; click to toggle.
-- RTL applies only to chat messages — **code blocks and UI elements stay LTR**.
-- **Activate / Deactivate / Check Status** commands available from the Command Palette.
-- **Auto-reactivate** after Cursor updates overwrite the patched files.
-- Automatic backup and restore of original workbench files.
-- Supports Windows, macOS, and Linux.
+## [1.0.3] — 2026-07-10
+
+### Fixed
+- VSIX build: BOM-free `package.json`, forward-slash zip entries (fixes "not a JSON file" install error)
+- Per-element RTL/LTR detection instead of forcing all elements RTL (fixes mixed-language layout breakage)
+
+---
+
+## [1.0.2] — 2026-07-10
+
+### Added
+- Custom extension package (`cursor-chat-rtl-persian`) forked from yechielby v0.1.6
+- Support for `.markdown-lexical-editor-container` (new Cursor Agent DOM)
+
+---
+
+## [1.0.1] — 2026-07-10
+
+### Added
+- Initial Persian fork with expanded CSS selectors and MutationObserver scanner
+
+---
+
+## Upstream reference
+
+| Version | Source |
+|---------|--------|
+| 0.1.6 | [yechielby/cursor-chat-rtl-extension](https://github.com/yechielby/cursor-chat-rtl-extension) — original ⇄ toggle + workbench patch |
+
+[1.1.0]: https://github.com/alifath/cursor-chat-rtl-persian/compare/v1.0.5...v1.1.0
+[1.0.5]: https://github.com/alifath/cursor-chat-rtl-persian/compare/v1.0.4...v1.0.5
+[1.0.4]: https://github.com/alifath/cursor-chat-rtl-persian/compare/v1.0.3...v1.0.4
+[1.0.3]: https://github.com/alifath/cursor-chat-rtl-persian/compare/v1.0.2...v1.0.3
+[1.0.2]: https://github.com/alifath/cursor-chat-rtl-persian/compare/v1.0.1...v1.0.2
+[1.0.1]: https://github.com/alifath/cursor-chat-rtl-persian/releases/tag/v1.0.1
