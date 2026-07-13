@@ -6,6 +6,34 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.1.3] — 2026-07-13
+
+### Fixed
+- **Removed aggressive RLM from chat input** — typing with English or numbers no longer scrambles direction
+- **Placeholder** — removed `right: 15px` hack; text stays inside the input box with `text-align: right`
+- Input: override Lexical `dir="ltr"` while typing via CSS + lightweight `fixInputDirection` (no character injection)
+- Agent display: RLM kept only for Latin-leading mixed lines (not numbers)
+
+---
+
+## [1.1.2] — 2026-07-13
+
+### Fixed
+- **English-leading mixed lines** (e.g. `EngageBox را تأیید…`) — Cursor Lexical sets `dir="ltr"` on containers; restored container-level RTL override
+- Added **RLM (U+200F)** injection for LTR-leading Persian lines in agent messages and chat input
+- Expanded scanner to `.markdown-lexical-editor-container`, `.markdown-section`, and `div` text nodes
+
+---
+
+## [1.1.1] — 2026-07-10
+
+### Fixed
+- **English-leading mixed lines** — sentences starting with LTR words (e.g. `EngageBox را تأیید…`) no longer reverse visually
+- Root cause: `unicode-bidi: plaintext` chose LTR base from the first strong character; switched to `isolate` + forced `dir=rtl`
+- Same fix applied to the **chat input / typing area**
+
+---
+
 ## [1.1.0] — 2026-07-10
 
 ### Added

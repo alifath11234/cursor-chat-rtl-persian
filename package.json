@@ -2,7 +2,7 @@
   "name": "cursor-chat-rtl-persian",
   "displayName": "Cursor Chat RTL — Persian",
   "description": "RTL support for Cursor Agent chat (Persian, Arabic, Hebrew). Two toolbar toggles: ⇄ for chat text, code icon for code blocks & Monaco in chat. Patches Cursor workbench.",
-  "version": "1.1.0",
+  "version": "1.1.3",
   "publisher": "alifath",
   "author": {
     "name": "ALI FATHNEJAT",

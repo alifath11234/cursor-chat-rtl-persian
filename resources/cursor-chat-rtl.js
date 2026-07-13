@@ -1,7 +1,6 @@
 ﻿/* === CURSOR-CHAT-RTL-JS active === */
-/* v1.1.0 - ALI FATHNEJAT (fork of yechielby/cursor-chat-rtl-extension)
-   ⇄  = RTL for Persian/Arabic/Hebrew chat text
-   </> = RTL for code blocks & Monaco inside agent chat only */
+/* v1.1.3 - ALI FATHNEJAT (fork of yechielby/cursor-chat-rtl-extension)
+   Input: CSS-only RTL (no RLM). Agent: optional RLM for Latin-leading lines only. */
 (function() {
     var BTN_ID = 'cursor-rtl-toggle-btn';
     var CODE_BTN_ID = 'cursor-rtl-code-toggle-btn';
@@ -11,7 +10,10 @@
     var STORAGE_KEY_CODE = 'cursor-chat-rtl-code-active';
     var MARK_ATTR = 'data-cursor-rtl';
     var MARK_CODE_ATTR = 'data-cursor-rtl-code';
-    var LOG = '[Cursor RTL v1.1.0]';
+    var RLM_ATTR = 'data-cursor-rtl-rlm';
+    var LOG = '[Cursor RTL v1.1.3]';
+    var RLM = '\u200F';
+    var LTR_LEAD = /^[\s]*[A-Za-z@#]/;
 
     var TOOLBAR_SELECTORS = [
         '.editor-actions .monaco-action-bar > ul.actions-container[aria-label="Editor actions"]',
@@ -25,10 +27,25 @@
         'composer.newAgentChat'
     ];
 
-    var TEXT_TAGS = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, th, td';
-    var LIST_TAGS = 'ul, ol';
+    var CONTAINER_SELECTORS = [
+        '.composer-rendered-message .markdown-lexical-editor-container',
+        '.composer-rendered-message .markdown-section',
+        '.composer-rendered-message .markdown-root'
+    ];
 
-    /* Chat scope — code toggle never leaves agent chat */
+    var TEXT_TAGS = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, th, td, div';
+    var LIST_TAGS = 'ul, ol';
+    var INPUT_SELECTORS = [
+        '.aislash-editor-input',
+        '.aislash-editor-input-readonly',
+        '.ui-prompt-input-editor__input',
+        '.ui-prompt-input-tiptap-readonly__content',
+        '.composer-bar-input .ProseMirror',
+        '.composer-input-container [contenteditable="true"]'
+    ].join(', ');
+
+    var INPUT_ROOT = '.full-input-box, .composer-bar-input, .composer-input-container';
+
     var CHAT_SCOPE = '.composer-rendered-message, .composer-human-message';
 
     var CODE_BLOCK_SELECTORS = [
@@ -41,10 +58,8 @@
         '.composer-rendered-message .monaco-editor'
     ].join(', ');
 
-    /* Exclude from text scanner */
     var EXCLUDE = [
         '.monaco-editor',
-        '.ProseMirror',
         '.plan-editor',
         '.ui-plan-editor',
         'code',
@@ -78,6 +93,18 @@
         return el && el.closest && !!el.closest(CHAT_SCOPE);
     }
 
+    function inMarkdownContainer(el) {
+        if (!el || !el.closest) return false;
+        for (var i = 0; i < CONTAINER_SELECTORS.length; i++) {
+            if (el.closest(CONTAINER_SELECTORS[i].replace('.composer-rendered-message ', ''))) return true;
+        }
+        return !!el.closest('.markdown-lexical-editor-container, .markdown-section, .markdown-root');
+    }
+
+    function isInputElement(el) {
+        return el && el.closest && !!el.closest(INPUT_ROOT);
+    }
+
     function hasRtlText(text) {
         return RTL_CHARS.test(text || '');
     }
@@ -90,6 +117,7 @@
     function unmark(el) {
         el.removeAttribute('dir');
         el.removeAttribute(MARK_ATTR);
+        el.removeAttribute(RLM_ATTR);
     }
 
     function markCode(el) {
@@ -102,6 +130,35 @@
         el.removeAttribute(MARK_CODE_ATTR);
     }
 
+    function firstTextNode(el) {
+        var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+        return walker.nextNode();
+    }
+
+    function prependRlm(el) {
+        if (!el || el.getAttribute(RLM_ATTR) === 'true') return;
+        if (el.isContentEditable || isInputElement(el)) return;
+        var text = (el.textContent || '').replace(/^\u200F+/, '');
+        if (!hasRtlText(text) || !LTR_LEAD.test(text)) return;
+        var node = firstTextNode(el);
+        if (!node) return;
+        if (node.textContent.charAt(0) !== RLM) {
+            node.textContent = RLM + node.textContent;
+        }
+        el.setAttribute(RLM_ATTR, 'true');
+    }
+
+    function fixInputDirection(el) {
+        if (!el || !isRtlActive()) return;
+        mark(el, 'rtl');
+        var inner = el.querySelectorAll('p, [dir]');
+        for (var i = 0; i < inner.length; i++) {
+            if (isInputElement(inner[i]) || el.contains(inner[i])) {
+                inner[i].setAttribute('dir', 'rtl');
+            }
+        }
+    }
+
     function clearAllManaged() {
         var managed = document.querySelectorAll('[' + MARK_ATTR + ']');
         for (var i = 0; i < managed.length; i++) unmark(managed[i]);
@@ -112,18 +169,44 @@
         for (var i = 0; i < managed.length; i++) unmarkCode(managed[i]);
     }
 
+    function scanContainers() {
+        if (!isRtlActive()) return;
+        for (var i = 0; i < CONTAINER_SELECTORS.length; i++) {
+            var containers = document.querySelectorAll(CONTAINER_SELECTORS[i]);
+            for (var j = 0; j < containers.length; j++) {
+                var c = containers[j];
+                if (hasRtlText(c.textContent)) {
+                    mark(c, 'rtl');
+                    prependRlm(c);
+                }
+            }
+        }
+    }
+
+    function scanInputs() {
+        if (!isRtlActive()) return;
+        var inputs = document.querySelectorAll(INPUT_SELECTORS);
+        for (var i = 0; i < inputs.length; i++) {
+            fixInputDirection(inputs[i]);
+        }
+    }
+
     function scanText() {
         if (!isRtlActive()) return;
+
+        scanContainers();
 
         var nodes = document.querySelectorAll(TEXT_TAGS);
         for (var i = 0; i < nodes.length; i++) {
             var el = nodes[i];
-            if (hasRtlText(el.textContent)) {
-                if (isExcluded(el)) continue;
-                mark(el, 'rtl');
-            } else if (el.hasAttribute(MARK_ATTR)) {
-                unmark(el);
+            if (!hasRtlText(el.textContent)) {
+                if (el.hasAttribute(MARK_ATTR) && !inMarkdownContainer(el)) unmark(el);
+                continue;
             }
+            if (isExcluded(el)) continue;
+            if (el.tagName === 'DIV' && !inMarkdownContainer(el) && !el.closest(INPUT_SELECTORS)) continue;
+            mark(el, 'rtl');
+            prependRlm(el);
         }
 
         var lists = document.querySelectorAll(LIST_TAGS);
@@ -142,11 +225,12 @@
                 unmark(list);
             }
         }
+
+        scanInputs();
     }
 
     function scanCode() {
         if (!isCodeRtlActive()) return;
-
         var blocks = document.querySelectorAll(CODE_BLOCK_SELECTORS);
         for (var i = 0; i < blocks.length; i++) {
             var el = blocks[i];
@@ -158,6 +242,23 @@
     function scan() {
         scanText();
         scanCode();
+    }
+
+    function bindInputHandlers() {
+        document.addEventListener('focusin', function(e) {
+            if (!isRtlActive()) return;
+            var t = e.target;
+            if (t && t.matches && t.matches(INPUT_SELECTORS)) {
+                fixInputDirection(t);
+            }
+        }, true);
+        document.addEventListener('input', function(e) {
+            if (!isRtlActive()) return;
+            var t = e.target;
+            if (t && t.matches && t.matches(INPUT_SELECTORS)) {
+                fixInputDirection(t);
+            }
+        }, true);
     }
 
     function applyBodyClassesFromStorage() {
@@ -199,12 +300,10 @@
         var firstLi = findNewChatButton();
         if (!firstLi) return;
 
-        /* ⇄ RTL text toggle */
         if (!document.getElementById(BTN_ID)) {
             var rtlLi = document.createElement('li');
             rtlLi.className = 'action-item';
             rtlLi.setAttribute('role', 'presentation');
-
             var rtlBtn = createToolbarButton(
                 BTN_ID, '', 'Toggle RTL for chat text (Persian/Arabic/Hebrew)',
                 'cursor-rtl-active', isRtlActive,
@@ -218,21 +317,17 @@
                 }
             );
             rtlBtn.textContent = '\u21C4';
-
             rtlLi.appendChild(rtlBtn);
             firstLi.insertAdjacentElement('afterend', rtlLi);
             firstLi = rtlLi;
-            console.log(LOG, 'text toggle inserted');
         } else {
             firstLi = document.getElementById(BTN_ID).closest('li.action-item') || firstLi;
         }
 
-        /* </> Code/Monaco RTL toggle (chat only) */
         if (!document.getElementById(CODE_BTN_ID)) {
             var codeLi = document.createElement('li');
             codeLi.className = 'action-item';
             codeLi.setAttribute('role', 'presentation');
-
             var codeBtn = createToolbarButton(
                 CODE_BTN_ID, 'codicon codicon-code',
                 'Toggle RTL for code blocks & Monaco in agent chat',
@@ -246,10 +341,8 @@
                     if (on) scanCode(); else clearAllCodeManaged();
                 }
             );
-
             codeLi.appendChild(codeBtn);
             firstLi.insertAdjacentElement('afterend', codeLi);
-            console.log(LOG, 'code toggle inserted');
         }
     }
 
@@ -286,6 +379,7 @@
     function start() {
         console.log(LOG, 'started — by ALI FATHNEJAT');
         applyBodyClassesFromStorage();
+        bindInputHandlers();
         tryInsertButtons();
         scan();
         attachObserver(document.body);
