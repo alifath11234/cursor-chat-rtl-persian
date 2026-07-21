@@ -1,17 +1,20 @@
 ﻿/* === CURSOR-CHAT-RTL-JS active === */
-/* v1.1.3 - ALI FATHNEJAT (fork of yechielby/cursor-chat-rtl-extension)
-   Input: CSS-only RTL (no RLM). Agent: optional RLM for Latin-leading lines only. */
+/* v1.2.3 - fix plan crash: no infinite observer loop, CSS-first for plan */
 (function() {
     var BTN_ID = 'cursor-rtl-toggle-btn';
     var CODE_BTN_ID = 'cursor-rtl-code-toggle-btn';
+    var PLAN_BTN_ID = 'cursor-rtl-plan-toggle-btn';
     var BODY_CLASS = 'cursor-chat-rtl';
     var BODY_CLASS_CODE = 'cursor-chat-rtl-code';
+    var BODY_CLASS_PLAN = 'cursor-chat-rtl-plan';
     var STORAGE_KEY = 'cursor-chat-rtl-active';
     var STORAGE_KEY_CODE = 'cursor-chat-rtl-code-active';
+    var STORAGE_KEY_PLAN = 'cursor-chat-rtl-plan-active';
     var MARK_ATTR = 'data-cursor-rtl';
     var MARK_CODE_ATTR = 'data-cursor-rtl-code';
+    var MARK_PLAN_ATTR = 'data-cursor-rtl-plan';
     var RLM_ATTR = 'data-cursor-rtl-rlm';
-    var LOG = '[Cursor RTL v1.1.3]';
+    var LOG = '[Cursor RTL v1.2.3]';
     var RLM = '\u200F';
     var LTR_LEAD = /^[\s]*[A-Za-z@#]/;
 
@@ -48,6 +51,43 @@
 
     var CHAT_SCOPE = '.composer-rendered-message, .composer-human-message';
 
+    var PLAN_SCOPE = '.plan-editor, .ui-plan-editor, .composer-plan-container';
+    var PLAN_CONTAINER_SELECTORS = [
+        '.plan-editor__richtext',
+        '.plan-editor__richtext-content',
+        '.ui-plan-editor',
+        '.composer-plan-markdown-container',
+        '.composer-create-plan-markdown',
+        '.composer-plan-content'
+    ];
+    var PLAN_MARKDOWN_SELECTORS = [
+        '.markdown-lexical-editor-container',
+        '.markdown-section',
+        '.markdown-root'
+    ];
+    var PLAN_TEXT_TAGS = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, th, td, div';
+    var PLAN_UI_EXCLUDE = [
+        '.plan-build-button',
+        '.plan-breadcrumb-controls',
+        '.plan-breadcrumb-mode-dropdown',
+        '.plan-execution-action-button',
+        '.plan-execution-message-container',
+        '.plan-todos-section__phase-action',
+        '.plan-todo__remove',
+        '.plan-todo__assignment',
+        '.composer-plan-buttons',
+        '.composer-plan-header',
+        '.composer-plan-title-container',
+        '.composer-plan-agents-list',
+        '.composer-plan-collapse-button-container',
+        '.composer-plan-expand-button-container',
+        '.ui-plan-tab-header',
+        '.ui-plan__todos-phase',
+        '.ui-plan__todo-row',
+        '.ui-plan__references-list',
+        '.ui-plan-tray'
+    ].join(', ');
+
     var CODE_BLOCK_SELECTORS = [
         '.composer-rendered-message pre',
         '.composer-rendered-message .markdown-lexical-editor-code-block',
@@ -62,6 +102,7 @@
         '.monaco-editor',
         '.plan-editor',
         '.ui-plan-editor',
+        '.composer-plan-container',
         'code',
         'pre',
         '.xterm',
@@ -85,12 +126,24 @@
         return document.body && document.body.classList.contains(BODY_CLASS_CODE);
     }
 
+    function isPlanRtlActive() {
+        return document.body && document.body.classList.contains(BODY_CLASS_PLAN);
+    }
+
     function isExcluded(el) {
         return !el || !el.closest || !!el.closest(EXCLUDE);
     }
 
     function inChatScope(el) {
         return el && el.closest && !!el.closest(CHAT_SCOPE);
+    }
+
+    function inPlanScope(el) {
+        return el && el.closest && !!el.closest(PLAN_SCOPE);
+    }
+
+    function isPlanUiElement(el) {
+        return el && el.closest && !!el.closest(PLAN_UI_EXCLUDE);
     }
 
     function inMarkdownContainer(el) {
@@ -130,6 +183,17 @@
         el.removeAttribute(MARK_CODE_ATTR);
     }
 
+    function markPlan(el) {
+        el.setAttribute('dir', 'rtl');
+        el.setAttribute(MARK_PLAN_ATTR, 'true');
+    }
+
+    function unmarkPlan(el) {
+        el.removeAttribute('dir');
+        el.removeAttribute(MARK_PLAN_ATTR);
+        el.removeAttribute(RLM_ATTR);
+    }
+
     function firstTextNode(el) {
         var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
         return walker.nextNode();
@@ -138,6 +202,19 @@
     function prependRlm(el) {
         if (!el || el.getAttribute(RLM_ATTR) === 'true') return;
         if (el.isContentEditable || isInputElement(el)) return;
+        var text = (el.textContent || '').replace(/^\u200F+/, '');
+        if (!hasRtlText(text) || !LTR_LEAD.test(text)) return;
+        var node = firstTextNode(el);
+        if (!node) return;
+        if (node.textContent.charAt(0) !== RLM) {
+            node.textContent = RLM + node.textContent;
+        }
+        el.setAttribute(RLM_ATTR, 'true');
+    }
+
+    function prependRlmPlan(el) {
+        if (!el || el.getAttribute(RLM_ATTR) === 'true') return;
+        if (isPlanUiElement(el)) return;
         var text = (el.textContent || '').replace(/^\u200F+/, '');
         if (!hasRtlText(text) || !LTR_LEAD.test(text)) return;
         var node = firstTextNode(el);
@@ -167,6 +244,11 @@
     function clearAllCodeManaged() {
         var managed = document.querySelectorAll('[' + MARK_CODE_ATTR + ']');
         for (var i = 0; i < managed.length; i++) unmarkCode(managed[i]);
+    }
+
+    function clearAllPlanManaged() {
+        var managed = document.querySelectorAll('[' + MARK_PLAN_ATTR + ']');
+        for (var i = 0; i < managed.length; i++) unmarkPlan(managed[i]);
     }
 
     function scanContainers() {
@@ -239,9 +321,111 @@
         }
     }
 
+    function shouldSkipPlanEl(el) {
+        if (!el || el.nodeType !== 1) return true;
+        if (isPlanUiElement(el)) return true;
+        var tag = el.tagName;
+        if (tag === 'CODE' || tag === 'PRE') return true;
+        if (el.closest('code, pre, .monaco-editor')) return true;
+        return false;
+    }
+
+    var planEnforceLock = false;
+    var planDirObservers = (typeof WeakMap === 'function') ? new WeakMap() : null;
+    var planScrollCaptureBound = false;
+    var planScanTimer = null;
+
+    function fixPlanLtrInRoot(root) {
+        if (!root || planEnforceLock || !isPlanRtlActive()) return;
+        planEnforceLock = true;
+        try {
+            markPlan(root);
+            var ltr = root.querySelectorAll('[dir="ltr"]');
+            for (var i = 0; i < ltr.length; i++) {
+                var el = ltr[i];
+                if (shouldSkipPlanEl(el)) continue;
+                if (el.getAttribute('dir') !== 'ltr') continue;
+                el.setAttribute('dir', 'rtl');
+                el.setAttribute(MARK_PLAN_ATTR, 'true');
+            }
+        } finally {
+            planEnforceLock = false;
+        }
+    }
+
+    function scanPlan() {
+        if (!isPlanRtlActive() || planEnforceLock) return;
+        var roots = document.querySelectorAll(PLAN_SCOPE);
+        for (var r = 0; r < roots.length; r++) {
+            attachPlanDirObserver(roots[r]);
+            fixPlanLtrInRoot(roots[r]);
+        }
+    }
+
+    function attachPlanDirObserver(root) {
+        if (!root || !isPlanRtlActive()) return;
+        if (planDirObservers && planDirObservers.has(root)) return;
+
+        var obs = new MutationObserver(function(mutations) {
+            if (!isPlanRtlActive() || planEnforceLock) return;
+            var needFix = false;
+            for (var i = 0; i < mutations.length; i++) {
+                var m = mutations[i];
+                if (m.type === 'attributes' && m.attributeName === 'dir') {
+                    if (m.target.getAttribute && m.target.getAttribute('dir') === 'ltr') {
+                        needFix = true;
+                    }
+                } else if (m.type === 'childList' && m.addedNodes.length) {
+                    needFix = true;
+                }
+            }
+            if (needFix) schedulePlanScan();
+        });
+
+        obs.observe(root, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ['dir']
+        });
+
+        if (planDirObservers) planDirObservers.set(root, obs);
+    }
+
+    function schedulePlanScan() {
+        if (!isPlanRtlActive()) return;
+        if (planScanTimer) return;
+        planScanTimer = setTimeout(function() {
+            planScanTimer = null;
+            scanPlan();
+        }, 150);
+    }
+
+    function bindPlanScrollCapture() {
+        if (planScrollCaptureBound) return;
+        planScrollCaptureBound = true;
+        document.addEventListener('scroll', function(e) {
+            if (!isPlanRtlActive() || planEnforceLock) return;
+            if (!inPlanScope(e.target)) return;
+            schedulePlanScan();
+        }, true);
+    }
+
+    function bindPlanWatchers() {
+        bindPlanScrollCapture();
+    }
+
+    function stopPlanWatchers() {
+        if (planScanTimer) {
+            clearTimeout(planScanTimer);
+            planScanTimer = null;
+        }
+    }
+
     function scan() {
         scanText();
         scanCode();
+        if (isPlanRtlActive()) schedulePlanScan();
     }
 
     function bindInputHandlers() {
@@ -268,6 +452,9 @@
         }
         if (localStorage.getItem(STORAGE_KEY_CODE) === 'true') {
             document.body.classList.add(BODY_CLASS_CODE);
+        }
+        if (localStorage.getItem(STORAGE_KEY_PLAN) === 'true') {
+            document.body.classList.add(BODY_CLASS_PLAN);
         }
     }
 
@@ -343,6 +530,37 @@
             );
             codeLi.appendChild(codeBtn);
             firstLi.insertAdjacentElement('afterend', codeLi);
+            firstLi = codeLi;
+        } else {
+            firstLi = document.getElementById(CODE_BTN_ID).closest('li.action-item') || firstLi;
+        }
+
+        if (!document.getElementById(PLAN_BTN_ID)) {
+            var planLi = document.createElement('li');
+            planLi.className = 'action-item';
+            planLi.setAttribute('role', 'presentation');
+            var planBtn = createToolbarButton(
+                PLAN_BTN_ID, 'codicon codicon-checklist',
+                'Toggle RTL for Plan details page',
+                'cursor-rtl-plan-active', isPlanRtlActive,
+                function(e) {
+                    e.preventDefault();
+                    var on = document.body.classList.toggle(BODY_CLASS_PLAN);
+                    planBtn.classList.toggle('cursor-rtl-plan-active', on);
+                    localStorage.setItem(STORAGE_KEY_PLAN, on ? 'true' : 'false');
+                    console.log(LOG, 'plan RTL:', on ? 'ON' : 'OFF');
+                    if (on) {
+                        bindPlanWatchers();
+                        scanPlan();
+                    } else {
+                        stopPlanWatchers();
+                        clearAllPlanManaged();
+                    }
+                }
+            );
+            planLi.appendChild(planBtn);
+            firstLi.insertAdjacentElement('afterend', planLi);
+            if (isPlanRtlActive()) bindPlanWatchers();
         }
     }
 
@@ -380,6 +598,7 @@
         console.log(LOG, 'started — by ALI FATHNEJAT');
         applyBodyClassesFromStorage();
         bindInputHandlers();
+        if (isPlanRtlActive()) bindPlanWatchers();
         tryInsertButtons();
         scan();
         attachObserver(document.body);

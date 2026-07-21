@@ -6,6 +6,41 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.2.3] — 2026-07-21
+
+### Fixed
+- **Cursor crash on Plan open** — removed infinite MutationObserver loop, 400ms interval, and heavy full-DOM scan
+- Plan RTL now CSS-first + lightweight `[dir=ltr]` fix only (debounced 150ms)
+
+---
+
+## [1.2.2] — 2026-07-21
+
+### Fixed
+- **Agent Mode plan page** uses `.ui-plan-editor` (not `.plan-editor`) — now included in plan RTL scope
+- **Scroll revert to LTR** — MutationObserver watches `dir` attribute; scroll capture + 400ms interval re-enforces RTL when Lexical virtualizes content
+
+---
+
+## [1.2.1] — 2026-07-21
+
+### Fixed
+- **Plan RTL in Agent Mode** — inline plan uses `.composer-plan-markdown-container` (not `.plan-editor`)
+- Re-apply RTL on scroll (Lexical resets `dir=ltr` when virtualizing content)
+- Plan areas excluded from chat text scanner to avoid conflicts
+
+---
+
+## [1.2.0] — 2026-07-21
+
+### Added
+- **Plan RTL toggle** (checklist codicon) — third toolbar button for Plan details page (`.plan-editor`)
+  - Fixes mixed LTR/RTL in plan headings, lists, and tables
+  - Scoped to plan content only; Build buttons and plan UI chrome stay LTR
+  - State persisted in `localStorage` (`cursor-chat-rtl-plan-active`)
+
+---
+
 ## [1.1.3] — 2026-07-13
 
 ### Fixed

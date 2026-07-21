@@ -1,13 +1,14 @@
 ﻿/* === CURSOR-CHAT-RTL-START === */
 /* RTL-MODE: active */
-/* RTL-VERSION: 1.1.3-alifath */
+/* RTL-VERSION: 1.2.3-alifath */
 /* By ALI FATHNEJAT — fork of yechielby/cursor-chat-rtl-extension */
 
 /* ==========================================
    Toolbar toggle buttons
    ========================================== */
 #cursor-rtl-toggle-btn,
-#cursor-rtl-code-toggle-btn {
+#cursor-rtl-code-toggle-btn,
+#cursor-rtl-plan-toggle-btn {
     font-size: 14px !important;
     font-weight: bold !important;
     width: 28px;
@@ -27,15 +28,18 @@
 }
 
 #cursor-rtl-toggle-btn:hover,
-#cursor-rtl-code-toggle-btn:hover { opacity: 1; }
+#cursor-rtl-code-toggle-btn:hover,
+#cursor-rtl-plan-toggle-btn:hover { opacity: 1; }
 
 #cursor-rtl-toggle-btn.cursor-rtl-active,
-#cursor-rtl-code-toggle-btn.cursor-rtl-code-active {
+#cursor-rtl-code-toggle-btn.cursor-rtl-code-active,
+#cursor-rtl-plan-toggle-btn.cursor-rtl-plan-active {
     opacity: 1;
     background: var(--vscode-button-background, rgba(128, 128, 128, 0.3));
 }
 
-#cursor-rtl-code-toggle-btn.codicon::before {
+#cursor-rtl-code-toggle-btn.codicon::before,
+#cursor-rtl-plan-toggle-btn.codicon::before {
     font-size: 16px !important;
 }
 
@@ -225,6 +229,78 @@ body.cursor-chat-rtl-code .composer-message-codeblock[data-cursor-rtl-code] {
 body.cursor-chat-rtl-code .composer-rendered-message pre[data-cursor-rtl-code] code {
     direction: inherit !important;
     text-align: inherit !important;
+}
+
+/* Plan — IDE (.plan-editor) + Agent Mode (.ui-plan-editor) + inline plan */
+body.cursor-chat-rtl-plan .plan-editor,
+body.cursor-chat-rtl-plan .plan-editor__richtext,
+body.cursor-chat-rtl-plan .plan-editor__richtext-content,
+body.cursor-chat-rtl-plan .ui-plan-editor,
+body.cursor-chat-rtl-plan .composer-plan-markdown-container,
+body.cursor-chat-rtl-plan .composer-create-plan-markdown,
+body.cursor-chat-rtl-plan .composer-plan-content {
+    direction: rtl !important;
+    unicode-bidi: isolate !important;
+    text-align: right !important;
+}
+
+body.cursor-chat-rtl-plan :is(.plan-editor__richtext, .plan-editor__richtext-content, .ui-plan-editor, .composer-plan-markdown-container, .composer-create-plan-markdown, .composer-plan-content) :is(p, div, li, h1, h2, h3, h4, h5, h6, blockquote, td, th),
+body.cursor-chat-rtl-plan :is(.plan-editor, .ui-plan-editor, .composer-plan-container) .markdown-lexical-editor-container,
+body.cursor-chat-rtl-plan :is(.plan-editor, .ui-plan-editor, .composer-plan-container) .markdown-section,
+body.cursor-chat-rtl-plan :is(.plan-editor, .ui-plan-editor) [data-cursor-rtl-plan][dir="rtl"] {
+    direction: rtl !important;
+    unicode-bidi: isolate !important;
+    text-align: right !important;
+}
+
+body.cursor-chat-rtl-plan :is(.plan-editor__richtext, .plan-editor__richtext-content, .ui-plan-editor, .composer-plan-markdown-container, .composer-create-plan-markdown, .composer-plan-content) [dir="ltr"]:not(.monaco-editor):not(pre):not(code),
+body.cursor-chat-rtl-plan :is(.plan-editor, .ui-plan-editor) .markdown-lexical-editor-container[dir="ltr"],
+body.cursor-chat-rtl-plan :is(.plan-editor, .ui-plan-editor) .markdown-section[dir="ltr"],
+body.cursor-chat-rtl-plan :is(.plan-editor, .ui-plan-editor) .markdown-lexical-editor-container [dir="ltr"]:not(.monaco-editor):not(pre):not(code),
+body.cursor-chat-rtl-plan :is(.plan-editor, .ui-plan-editor) .markdown-section [dir="ltr"]:not(.monaco-editor):not(pre):not(code) {
+    direction: rtl !important;
+    unicode-bidi: isolate !important;
+    text-align: right !important;
+}
+
+body.cursor-chat-rtl-plan :is(.plan-editor, .ui-plan-editor, .composer-plan-markdown-container, .composer-create-plan-markdown) ul,
+body.cursor-chat-rtl-plan :is(.plan-editor, .ui-plan-editor, .composer-plan-markdown-container, .composer-create-plan-markdown) ol {
+    padding-inline-start: 22px !important;
+    padding-inline-end: 0 !important;
+}
+
+body.cursor-chat-rtl-plan :is(.plan-editor, .ui-plan-editor, .composer-plan-markdown-container, .composer-create-plan-markdown) table {
+    direction: rtl !important;
+}
+
+body.cursor-chat-rtl-plan :is(.plan-editor__richtext, .plan-editor__richtext-content, .ui-plan-editor, .composer-plan-markdown-container, .composer-create-plan-markdown) :is(code, pre) {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
+    text-align: left !important;
+    display: inline-block;
+}
+
+/* Plan UI chrome stays LTR */
+body.cursor-chat-rtl-plan .plan-build-button,
+body.cursor-chat-rtl-plan .plan-breadcrumb-controls,
+body.cursor-chat-rtl-plan .plan-breadcrumb-mode-dropdown,
+body.cursor-chat-rtl-plan .plan-execution-action-button,
+body.cursor-chat-rtl-plan .plan-execution-message-container,
+body.cursor-chat-rtl-plan .plan-todos-section__phase-action,
+body.cursor-chat-rtl-plan .plan-todo__remove,
+body.cursor-chat-rtl-plan .plan-todo__assignment,
+body.cursor-chat-rtl-plan .composer-plan-buttons,
+body.cursor-chat-rtl-plan .composer-plan-header,
+body.cursor-chat-rtl-plan .composer-plan-title-container,
+body.cursor-chat-rtl-plan .composer-plan-agents-list,
+body.cursor-chat-rtl-plan .composer-plan-collapse-button-container,
+body.cursor-chat-rtl-plan .composer-plan-expand-button-container,
+body.cursor-chat-rtl-plan .ui-plan-tab-header,
+body.cursor-chat-rtl-plan .ui-plan__todos-phase,
+body.cursor-chat-rtl-plan .ui-plan__todo-row,
+body.cursor-chat-rtl-plan .ui-plan__references-list,
+body.cursor-chat-rtl-plan .ui-plan-tray {
+    direction: ltr !important;
 }
 
 /* === CURSOR-CHAT-RTL-END === */
