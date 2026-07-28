@@ -6,6 +6,54 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.2.8] — 2026-07-29
+
+### Fixed
+- **Chat/MD RTL missing** — restored CSS-first RTL for Glass/agent conversation tiles + chat markdown; MD file Preview uses CSS-only (no JS mutation)
+- Expanded chat scope beyond `.composer-rendered-message` (agent-conversation-tiling / agent-conversations)
+
+### Changed
+- RTL toolbar placed **beside the IDE button** (`[data-component="open-editor-window-cta"]`) instead of floating top-right
+
+---
+
+## [1.2.7] — 2026-07-28
+
+### Fixed
+- **Buttons not clickable** — Electron titlebar drag (`-webkit-app-region: drag`) blocked clicks; buttons/Glass bar now `no-drag` + high z-index + floating bar only
+- **MD Preview scroll jump** — `scanText` was mutating ALL Persian `p/li/h*` in the workbench including file Preview; now **chat-only**. Leftover marks outside chat are cleared.
+- Scoped broad `.markdown-section` list CSS to `.composer-rendered-message` only
+
+---
+
+## [1.2.6] — 2026-07-28
+
+### Fixed
+- **Agents Window still empty** — added Glass fallback bar (`#cursor-rtl-glass-bar`) into tiling header / glass-titlebar / floating if needed
+- Broader Glass detection + cleaner removal of wrong Agents-list buttons
+
+---
+
+## [1.2.5] — 2026-07-28
+
+### Fixed
+- **Agents Window (Glass)** — inject toggles into `.glass-agent-conversation-tiling__header-actions*` (not agents list sidebar)
+- Removed wrong vertical buttons under Agents list Customize (`.agent-sidebar-header-actions`)
+- **Scroll thrash with toggles OFF** — dropped `characterData` MutationObserver; skip DOM scan when all RTL modes are off; strip leftover RLM on clear
+
+---
+
+## [1.2.4] — 2026-07-28
+
+### Fixed
+- **MD/Plan scroll jump & drift** — removed scroll-triggered Plan scan and MutationObserver dir loop; Plan RTL is CSS-first only
+- **Buttons missing in Agent Mode** — inject into every matching toolbar (not singleton), plus Agent hosts (`.composer-sticky-title__actions`, `.agent-tab-actions`)
+
+### Changed
+- Plan toggle icon is letter **P** (was checklist codicon)
+
+---
+
 ## [1.2.3] — 2026-07-21
 
 ### Fixed

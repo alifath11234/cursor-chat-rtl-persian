@@ -1,9 +1,11 @@
-﻿/* === CURSOR-CHAT-RTL-JS active === */
-/* v1.2.3 - fix plan crash: no infinite observer loop, CSS-first for plan */
+/* === CURSOR-CHAT-RTL-JS active === */
+/* v1.2.8 - buttons beside IDE CTA; restore chat/MD RTL via CSS-first */
 (function() {
-    var BTN_ID = 'cursor-rtl-toggle-btn';
-    var CODE_BTN_ID = 'cursor-rtl-code-toggle-btn';
-    var PLAN_BTN_ID = 'cursor-rtl-plan-toggle-btn';
+    var BTN_CLASS = 'cursor-rtl-toggle-btn';
+    var CODE_BTN_CLASS = 'cursor-rtl-code-toggle-btn';
+    var PLAN_BTN_CLASS = 'cursor-rtl-plan-toggle-btn';
+    var BTN_MARK = 'data-cursor-rtl-btn';
+    var GLASS_BAR_ID = 'cursor-rtl-glass-bar';
     var BODY_CLASS = 'cursor-chat-rtl';
     var BODY_CLASS_CODE = 'cursor-chat-rtl-code';
     var BODY_CLASS_PLAN = 'cursor-chat-rtl-plan';
@@ -14,26 +16,60 @@
     var MARK_CODE_ATTR = 'data-cursor-rtl-code';
     var MARK_PLAN_ATTR = 'data-cursor-rtl-plan';
     var RLM_ATTR = 'data-cursor-rtl-rlm';
-    var LOG = '[Cursor RTL v1.2.3]';
+    var LOG = '[Cursor RTL v1.2.8]';
     var RLM = '\u200F';
     var LTR_LEAD = /^[\s]*[A-Za-z@#]/;
 
     var TOOLBAR_SELECTORS = [
         '.editor-actions .monaco-action-bar > ul.actions-container[aria-label="Editor actions"]',
         '.auxiliary-bar-title-hide-toolbar .monaco-action-bar > ul.actions-container[role="toolbar"]',
-        '.monaco-action-bar > ul.actions-container[role="toolbar"]'
+        '.auxiliary-bar-title--agent-mode .title-actions .monaco-action-bar > ul.actions-container',
+        '.part.auxiliarybar .title-actions .monaco-action-bar > ul.actions-container',
+        '.monaco-action-bar > ul.actions-container[role="toolbar"]',
+        '.monaco-action-bar > ul.actions-container[aria-label="Editor actions"]'
+    ];
+
+    /* Agents Window = Glass conversation header — NOT agents list sidebar */
+    var AGENT_ACTION_HOSTS = [
+        '.glass-agent-conversation-tiling__header-actions-persistent',
+        '.glass-agent-conversation-tiling__header-actions',
+        '.glass-agent-conversation-tiling__header',
+        '.composer-sticky-title__actions',
+        '.auxiliary-bar-title--agent-mode .title-actions'
+    ];
+
+    var GLASS_FALLBACK_HOSTS = [
+        '.glass-agent-conversation-tiling__header',
+        '.glass-agent-conversation-tiling__header-main',
+        '[data-component="glass-titlebar"]',
+        '.agent-conversation-composer__solid',
+        '.composer-sticky-title'
+    ];
+
+    var WRONG_BUTTON_HOSTS = [
+        '.agent-sidebar-header-actions',
+        '.agent-tab-actions',
+        '.agent-sidebar-header',
+        '.agent-sidebar-header-top-row'
     ];
 
     var NEW_CHAT_COMMAND_IDS = [
         'composer.createNewComposerTab',
         'auxiliaryBar.newAgentMenu',
-        'composer.newAgentChat'
+        'composer.newAgentChat',
+        'composer.createNew',
+        'workbench.action.backgroundComposer.createNewComposerTab'
     ];
 
     var CONTAINER_SELECTORS = [
         '.composer-rendered-message .markdown-lexical-editor-container',
         '.composer-rendered-message .markdown-section',
-        '.composer-rendered-message .markdown-root'
+        '.composer-rendered-message .markdown-root',
+        '.composer-human-message .markdown-lexical-editor-container',
+        '.agent-conversation-tiling__tile .markdown-lexical-editor-container',
+        '.agent-conversation-tiling__tile .markdown-section',
+        '.agent-conversations .markdown-lexical-editor-container',
+        '.agent-conversations .markdown-section'
     ];
 
     var TEXT_TAGS = 'p, li, h1, h2, h3, h4, h5, h6, blockquote, th, td, div';
@@ -49,7 +85,20 @@
 
     var INPUT_ROOT = '.full-input-box, .composer-bar-input, .composer-input-container';
 
-    var CHAT_SCOPE = '.composer-rendered-message, .composer-human-message';
+    /* Agent chat scopes — classic composer + Glass Agents Window */
+    var CHAT_SCOPE = [
+        '.composer-rendered-message',
+        '.composer-human-message',
+        '.composer-human-message-container',
+        '.agent-conversations',
+        '.agent-conversation-tiling',
+        '.agent-conversation-tiling__tile',
+        '.glass-agent-conversation-tiling',
+        '.glass-agent-conversation-tiling__tile',
+        '.agent-conversation-composer__solid'
+    ].join(', ');
+
+    var IDE_CTA_SELECTOR = '[data-component="open-editor-window-cta"]';
 
     var PLAN_SCOPE = '.plan-editor, .ui-plan-editor, .composer-plan-container';
     var PLAN_CONTAINER_SELECTORS = [
@@ -113,7 +162,24 @@
         '.composer-message-codeblock',
         '.composer-diff-block',
         '.composer-terminal-output',
-        '.interactive-result-code-block'
+        '.interactive-result-code-block',
+        /* never touch MD file editor / preview */
+        '.editor-instance',
+        '.monaco-mouse-cursor-text',
+        '.webview',
+        '.webview-editor',
+        '.notebook-editor',
+        '.markdown-preview',
+        '.file-tab-markdown-preview',
+        '[data-mode-id="markdown"]',
+        '.editor-group-container .editor-container'
+    ].join(', ');
+
+    var PREVIEW_EXCLUDE = [
+        '.webview',
+        '.webview-editor',
+        '.notebook-editor',
+        '.markdown-preview'
     ].join(', ');
 
     var RTL_CHARS = /[\u0590-\u05FF\u0600-\u06FF\u0700-\u077F\u0780-\u07BF\u08A0-\u08FF\uFB1D-\uFB4F\uFB50-\uFDFF\uFE70-\uFEFE]/;
@@ -134,8 +200,24 @@
         return !el || !el.closest || !!el.closest(EXCLUDE);
     }
 
+    function inAgentConversation(el) {
+        return !!(el && el.closest && el.closest(CHAT_SCOPE));
+    }
+
+    function isFileEditorOrPreview(el) {
+        if (!el || !el.closest) return false;
+        if (inAgentConversation(el) || el.closest(PLAN_SCOPE)) return false;
+        /* MD file Preview / webview — do not JS-mutate (CSS-only) */
+        if (el.closest(PREVIEW_EXCLUDE)) return true;
+        /* Monaco source editor outside chat */
+        if (el.closest('.monaco-editor') && !inAgentConversation(el)) return true;
+        /* Editor group file tabs outside agent conversation */
+        if (el.closest('.editor-group-container') && !inAgentConversation(el)) return true;
+        return false;
+    }
+
     function inChatScope(el) {
-        return el && el.closest && !!el.closest(CHAT_SCOPE);
+        return inAgentConversation(el);
     }
 
     function inPlanScope(el) {
@@ -167,7 +249,20 @@
         if (!el.hasAttribute(MARK_ATTR)) el.setAttribute(MARK_ATTR, 'true');
     }
 
+    function stripRlmFromEl(el) {
+        if (!el) return;
+        var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+        var node;
+        while ((node = walker.nextNode())) {
+            if (node.textContent && node.textContent.indexOf(RLM) !== -1) {
+                node.textContent = node.textContent.replace(/\u200F+/g, '');
+            }
+        }
+        el.removeAttribute(RLM_ATTR);
+    }
+
     function unmark(el) {
+        if (el.hasAttribute(RLM_ATTR)) stripRlmFromEl(el);
         el.removeAttribute('dir');
         el.removeAttribute(MARK_ATTR);
         el.removeAttribute(RLM_ATTR);
@@ -189,6 +284,7 @@
     }
 
     function unmarkPlan(el) {
+        if (el.hasAttribute(RLM_ATTR)) stripRlmFromEl(el);
         el.removeAttribute('dir');
         el.removeAttribute(MARK_PLAN_ATTR);
         el.removeAttribute(RLM_ATTR);
@@ -281,6 +377,15 @@
         var nodes = document.querySelectorAll(TEXT_TAGS);
         for (var i = 0; i < nodes.length; i++) {
             var el = nodes[i];
+            if (isFileEditorOrPreview(el)) {
+                if (el.hasAttribute(MARK_ATTR)) unmark(el);
+                continue;
+            }
+            /* ONLY chat messages + inputs — never whole workbench / MD preview */
+            if (!inChatScope(el) && !isInputElement(el)) {
+                if (el.hasAttribute(MARK_ATTR)) unmark(el);
+                continue;
+            }
             if (!hasRtlText(el.textContent)) {
                 if (el.hasAttribute(MARK_ATTR) && !inMarkdownContainer(el)) unmark(el);
                 continue;
@@ -294,6 +399,10 @@
         var lists = document.querySelectorAll(LIST_TAGS);
         for (var j = 0; j < lists.length; j++) {
             var list = lists[j];
+            if (isFileEditorOrPreview(list) || (!inChatScope(list) && !isInputElement(list))) {
+                if (list.hasAttribute(MARK_ATTR)) unmark(list);
+                continue;
+            }
             var items = list.querySelectorAll(':scope > li');
             if (items.length === 0) continue;
             var rtlItems = 0;
@@ -321,111 +430,19 @@
         }
     }
 
-    function shouldSkipPlanEl(el) {
-        if (!el || el.nodeType !== 1) return true;
-        if (isPlanUiElement(el)) return true;
-        var tag = el.tagName;
-        if (tag === 'CODE' || tag === 'PRE') return true;
-        if (el.closest('code, pre, .monaco-editor')) return true;
-        return false;
-    }
-
-    var planEnforceLock = false;
-    var planDirObservers = (typeof WeakMap === 'function') ? new WeakMap() : null;
-    var planScrollCaptureBound = false;
-    var planScanTimer = null;
-
-    function fixPlanLtrInRoot(root) {
-        if (!root || planEnforceLock || !isPlanRtlActive()) return;
-        planEnforceLock = true;
-        try {
-            markPlan(root);
-            var ltr = root.querySelectorAll('[dir="ltr"]');
-            for (var i = 0; i < ltr.length; i++) {
-                var el = ltr[i];
-                if (shouldSkipPlanEl(el)) continue;
-                if (el.getAttribute('dir') !== 'ltr') continue;
-                el.setAttribute('dir', 'rtl');
-                el.setAttribute(MARK_PLAN_ATTR, 'true');
-            }
-        } finally {
-            planEnforceLock = false;
-        }
-    }
-
+    /* Plan RTL is CSS-first. Avoid DOM dir mutation on scroll — it causes jump/drift. */
     function scanPlan() {
-        if (!isPlanRtlActive() || planEnforceLock) return;
+        if (!isPlanRtlActive()) return;
         var roots = document.querySelectorAll(PLAN_SCOPE);
         for (var r = 0; r < roots.length; r++) {
-            attachPlanDirObserver(roots[r]);
-            fixPlanLtrInRoot(roots[r]);
-        }
-    }
-
-    function attachPlanDirObserver(root) {
-        if (!root || !isPlanRtlActive()) return;
-        if (planDirObservers && planDirObservers.has(root)) return;
-
-        var obs = new MutationObserver(function(mutations) {
-            if (!isPlanRtlActive() || planEnforceLock) return;
-            var needFix = false;
-            for (var i = 0; i < mutations.length; i++) {
-                var m = mutations[i];
-                if (m.type === 'attributes' && m.attributeName === 'dir') {
-                    if (m.target.getAttribute && m.target.getAttribute('dir') === 'ltr') {
-                        needFix = true;
-                    }
-                } else if (m.type === 'childList' && m.addedNodes.length) {
-                    needFix = true;
-                }
-            }
-            if (needFix) schedulePlanScan();
-        });
-
-        obs.observe(root, {
-            subtree: true,
-            childList: true,
-            attributes: true,
-            attributeFilter: ['dir']
-        });
-
-        if (planDirObservers) planDirObservers.set(root, obs);
-    }
-
-    function schedulePlanScan() {
-        if (!isPlanRtlActive()) return;
-        if (planScanTimer) return;
-        planScanTimer = setTimeout(function() {
-            planScanTimer = null;
-            scanPlan();
-        }, 150);
-    }
-
-    function bindPlanScrollCapture() {
-        if (planScrollCaptureBound) return;
-        planScrollCaptureBound = true;
-        document.addEventListener('scroll', function(e) {
-            if (!isPlanRtlActive() || planEnforceLock) return;
-            if (!inPlanScope(e.target)) return;
-            schedulePlanScan();
-        }, true);
-    }
-
-    function bindPlanWatchers() {
-        bindPlanScrollCapture();
-    }
-
-    function stopPlanWatchers() {
-        if (planScanTimer) {
-            clearTimeout(planScanTimer);
-            planScanTimer = null;
+            var root = roots[r];
+            if (!root.hasAttribute(MARK_PLAN_ATTR)) markPlan(root);
         }
     }
 
     function scan() {
         scanText();
         scanCode();
-        if (isPlanRtlActive()) schedulePlanScan();
     }
 
     function bindInputHandlers() {
@@ -458,110 +475,279 @@
         }
     }
 
-    function findNewChatButton() {
+    function syncButtonStates() {
+        var textOn = isRtlActive();
+        var codeOn = isCodeRtlActive();
+        var planOn = isPlanRtlActive();
+        var texts = document.querySelectorAll('.' + BTN_CLASS);
+        for (var i = 0; i < texts.length; i++) texts[i].classList.toggle('cursor-rtl-active', textOn);
+        var codes = document.querySelectorAll('.' + CODE_BTN_CLASS);
+        for (var j = 0; j < codes.length; j++) codes[j].classList.toggle('cursor-rtl-code-active', codeOn);
+        var plans = document.querySelectorAll('.' + PLAN_BTN_CLASS);
+        for (var k = 0; k < plans.length; k++) plans[k].classList.toggle('cursor-rtl-plan-active', planOn);
+    }
+
+    function hostHasButtons(host) {
+        return !!(host && host.querySelector && host.querySelector('[' + BTN_MARK + ']'));
+    }
+
+    function findMonacoAnchors() {
+        var anchors = [];
+        var seen = [];
+
+        function push(li) {
+            if (!li) return;
+            for (var s = 0; s < seen.length; s++) if (seen[s] === li) return;
+            var ul = li.closest('ul.actions-container') || li.parentElement;
+            if (hostHasButtons(ul)) return;
+            seen.push(li);
+            anchors.push({ mode: 'after', el: li });
+        }
+
         for (var t = 0; t < TOOLBAR_SELECTORS.length; t++) {
             var containers = document.querySelectorAll(TOOLBAR_SELECTORS[t]);
             for (var c = 0; c < containers.length; c++) {
                 for (var i = 0; i < NEW_CHAT_COMMAND_IDS.length; i++) {
-                    var li = containers[c].querySelector('li.action-item[data-command-id="' + NEW_CHAT_COMMAND_IDS[i] + '"]');
-                    if (li) return li;
+                    var items = containers[c].querySelectorAll('li.action-item[data-command-id="' + NEW_CHAT_COMMAND_IDS[i] + '"]');
+                    for (var n = 0; n < items.length; n++) push(items[n]);
                 }
             }
         }
-        return null;
+
+        for (var j = 0; j < NEW_CHAT_COMMAND_IDS.length; j++) {
+            var all = document.querySelectorAll('li.action-item[data-command-id="' + NEW_CHAT_COMMAND_IDS[j] + '"]');
+            for (var a = 0; a < all.length; a++) push(all[a]);
+        }
+
+        return anchors;
     }
 
-    function createToolbarButton(id, label, title, activeClass, isActive, onClick) {
+    function removeWrongHostButtons() {
+        for (var i = 0; i < WRONG_BUTTON_HOSTS.length; i++) {
+            var hosts = document.querySelectorAll(WRONG_BUTTON_HOSTS[i]);
+            for (var h = 0; h < hosts.length; h++) {
+                var marked = hosts[h].querySelectorAll('[' + BTN_MARK + ']');
+                for (var m = 0; m < marked.length; m++) {
+                    var node = marked[m];
+                    var li = node.closest ? node.closest('li.action-item') : null;
+                    if (li && li.hasAttribute(BTN_MARK)) li.parentNode && li.parentNode.removeChild(li);
+                    else if (node.parentNode) node.parentNode.removeChild(node);
+                }
+            }
+        }
+    }
+
+    function findAgentHosts() {
+        var hosts = [];
+        var seen = [];
+        for (var i = 0; i < AGENT_ACTION_HOSTS.length; i++) {
+            var nodes = document.querySelectorAll(AGENT_ACTION_HOSTS[i]);
+            for (var n = 0; n < nodes.length; n++) {
+                var el = nodes[n];
+                /* skip nested title-actions that already have monaco ul — use monaco path instead */
+                if (el.classList && el.classList.contains('title-actions') &&
+                    el.querySelector('ul.actions-container')) continue;
+                var dup = false;
+                for (var s = 0; s < seen.length; s++) if (seen[s] === el) { dup = true; break; }
+                if (dup || hostHasButtons(el)) continue;
+                seen.push(el);
+                hosts.push({ mode: 'append', el: el });
+            }
+        }
+        return hosts;
+    }
+
+    function createToolbarButton(btnClass, extraClass, title, activeClass, isActive, onClick) {
         var btn = document.createElement('a');
-        btn.id = id;
-        btn.className = 'action-label' + (label ? ' ' + label : '');
+        btn.className = 'action-label ' + btnClass + (extraClass ? ' ' + extraClass : '');
+        btn.setAttribute(BTN_MARK, 'true');
         btn.title = title;
         btn.setAttribute('role', 'button');
         btn.setAttribute('tabindex', '0');
+        btn.setAttribute('aria-label', title);
+        btn.style.webkitAppRegion = 'no-drag';
+        btn.style.appRegion = 'no-drag';
+        btn.style.pointerEvents = 'auto';
         if (isActive()) btn.classList.add(activeClass);
-        btn.addEventListener('click', onClick);
+        btn.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }, true);
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            onClick(e);
+        }, true);
+        btn.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                onClick(e);
+            }
+        });
         return btn;
     }
 
+    function wrapMonacoLi(btn) {
+        var li = document.createElement('li');
+        li.className = 'action-item';
+        li.setAttribute('role', 'presentation');
+        li.setAttribute(BTN_MARK, 'true');
+        li.appendChild(btn);
+        return li;
+    }
+
+    function onToggleText(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var on = document.body.classList.toggle(BODY_CLASS);
+        localStorage.setItem(STORAGE_KEY, on ? 'true' : 'false');
+        syncButtonStates();
+        console.log(LOG, 'text RTL:', on ? 'ON' : 'OFF');
+        if (on) scanText(); else clearAllManaged();
+    }
+
+    function onToggleCode(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var on = document.body.classList.toggle(BODY_CLASS_CODE);
+        localStorage.setItem(STORAGE_KEY_CODE, on ? 'true' : 'false');
+        syncButtonStates();
+        console.log(LOG, 'code RTL:', on ? 'ON' : 'OFF');
+        if (on) scanCode(); else clearAllCodeManaged();
+    }
+
+    function onTogglePlan(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var on = document.body.classList.toggle(BODY_CLASS_PLAN);
+        localStorage.setItem(STORAGE_KEY_PLAN, on ? 'true' : 'false');
+        syncButtonStates();
+        console.log(LOG, 'plan RTL:', on ? 'ON' : 'OFF');
+        if (on) scanPlan(); else clearAllPlanManaged();
+    }
+
+    function buildButtonSet(asMonacoLi) {
+        var rtlBtn = createToolbarButton(
+            BTN_CLASS, '',
+            'Toggle RTL for chat text (Persian/Arabic/Hebrew)',
+            'cursor-rtl-active', isRtlActive, onToggleText
+        );
+        rtlBtn.textContent = '\u21C4';
+
+        var codeBtn = createToolbarButton(
+            CODE_BTN_CLASS, 'codicon codicon-code',
+            'Toggle RTL for code blocks & Monaco in agent chat',
+            'cursor-rtl-code-active', isCodeRtlActive, onToggleCode
+        );
+
+        var planBtn = createToolbarButton(
+            PLAN_BTN_CLASS, 'cursor-rtl-plan-letter',
+            'Toggle RTL for Plan / MD page',
+            'cursor-rtl-plan-active', isPlanRtlActive, onTogglePlan
+        );
+        planBtn.textContent = 'P';
+
+        if (!asMonacoLi) {
+            var frag = document.createDocumentFragment();
+            frag.appendChild(rtlBtn);
+            frag.appendChild(codeBtn);
+            frag.appendChild(planBtn);
+            return frag;
+        }
+
+        var wrap = document.createDocumentFragment();
+        wrap.appendChild(wrapMonacoLi(rtlBtn));
+        wrap.appendChild(wrapMonacoLi(codeBtn));
+        wrap.appendChild(wrapMonacoLi(planBtn));
+        return wrap;
+    }
+
+    function insertIntoAnchor(anchor) {
+        if (!anchor || !anchor.el) return;
+        if (anchor.mode === 'after') {
+            var ul = anchor.el.closest('ul.actions-container') || anchor.el.parentElement;
+            if (hostHasButtons(ul)) return;
+            var set = buildButtonSet(true);
+            var nodes = [];
+            while (set.firstChild) nodes.push(set.removeChild(set.firstChild));
+            var ref = anchor.el;
+            for (var i = 0; i < nodes.length; i++) {
+                ref.insertAdjacentElement('afterend', nodes[i]);
+                ref = nodes[i];
+            }
+            return;
+        }
+        if (anchor.mode === 'append') {
+            if (hostHasButtons(anchor.el)) return;
+            anchor.el.appendChild(buildButtonSet(false));
+        }
+    }
+
+    function isGlassWindow() {
+        if (document.querySelector('[data-component="glass-titlebar"]')) return true;
+        if (document.querySelector('.glass-agent-conversation-tiling__header')) return true;
+        if (document.querySelector('.agent-conversation-composer__solid')) return true;
+        var wb = document.querySelector('.monaco-workbench');
+        if (wb && /\bglass/i.test(wb.className)) return true;
+        return false;
+    }
+
+    function createGlassBar() {
+        var bar = document.createElement('div');
+        bar.id = GLASS_BAR_ID;
+        bar.setAttribute(BTN_MARK, 'true');
+        bar.setAttribute('role', 'toolbar');
+        bar.setAttribute('aria-label', 'Cursor RTL toggles');
+        bar.style.webkitAppRegion = 'no-drag';
+        bar.style.appRegion = 'no-drag';
+        bar.style.pointerEvents = 'auto';
+        bar.appendChild(buildButtonSet(false));
+        return bar;
+    }
+
+    function ensureGlassFallbackBar() {
+        var ideBtn = document.querySelector(IDE_CTA_SELECTOR);
+        var bar = document.getElementById(GLASS_BAR_ID);
+
+        /* Prefer: place RTL toggles immediately before the IDE button */
+        if (ideBtn && ideBtn.parentElement) {
+            if (!bar) bar = createGlassBar();
+            bar.classList.remove('cursor-rtl-glass-bar--floating');
+            bar.classList.add('cursor-rtl-glass-bar--beside-ide');
+            if (bar.parentElement !== ideBtn.parentElement || bar.nextSibling !== ideBtn) {
+                ideBtn.parentElement.insertBefore(bar, ideBtn);
+                console.log(LOG, 'RTL bar placed beside IDE button');
+            }
+            return;
+        }
+
+        if (!isGlassWindow()) {
+            if (bar && bar.parentNode) bar.parentNode.removeChild(bar);
+            return;
+        }
+
+        /* Fallback floating only if IDE CTA not in DOM yet */
+        if (!bar) {
+            bar = createGlassBar();
+            bar.classList.add('cursor-rtl-glass-bar--floating');
+            document.body.appendChild(bar);
+            console.log(LOG, 'Glass floating bar (IDE CTA not found yet)');
+        } else if (!document.body.contains(bar) && !bar.classList.contains('cursor-rtl-glass-bar--beside-ide')) {
+            bar.classList.add('cursor-rtl-glass-bar--floating');
+            document.body.appendChild(bar);
+        }
+    }
     function tryInsertButtons() {
-        var firstLi = findNewChatButton();
-        if (!firstLi) return;
+        removeWrongHostButtons();
+        var anchors = findMonacoAnchors().concat(findAgentHosts());
+        for (var i = 0; i < anchors.length; i++) insertIntoAnchor(anchors[i]);
+        ensureGlassFallbackBar();
+        syncButtonStates();
+    }
 
-        if (!document.getElementById(BTN_ID)) {
-            var rtlLi = document.createElement('li');
-            rtlLi.className = 'action-item';
-            rtlLi.setAttribute('role', 'presentation');
-            var rtlBtn = createToolbarButton(
-                BTN_ID, '', 'Toggle RTL for chat text (Persian/Arabic/Hebrew)',
-                'cursor-rtl-active', isRtlActive,
-                function(e) {
-                    e.preventDefault();
-                    var on = document.body.classList.toggle(BODY_CLASS);
-                    rtlBtn.classList.toggle('cursor-rtl-active', on);
-                    localStorage.setItem(STORAGE_KEY, on ? 'true' : 'false');
-                    console.log(LOG, 'text RTL:', on ? 'ON' : 'OFF');
-                    if (on) scanText(); else clearAllManaged();
-                }
-            );
-            rtlBtn.textContent = '\u21C4';
-            rtlLi.appendChild(rtlBtn);
-            firstLi.insertAdjacentElement('afterend', rtlLi);
-            firstLi = rtlLi;
-        } else {
-            firstLi = document.getElementById(BTN_ID).closest('li.action-item') || firstLi;
-        }
-
-        if (!document.getElementById(CODE_BTN_ID)) {
-            var codeLi = document.createElement('li');
-            codeLi.className = 'action-item';
-            codeLi.setAttribute('role', 'presentation');
-            var codeBtn = createToolbarButton(
-                CODE_BTN_ID, 'codicon codicon-code',
-                'Toggle RTL for code blocks & Monaco in agent chat',
-                'cursor-rtl-code-active', isCodeRtlActive,
-                function(e) {
-                    e.preventDefault();
-                    var on = document.body.classList.toggle(BODY_CLASS_CODE);
-                    codeBtn.classList.toggle('cursor-rtl-code-active', on);
-                    localStorage.setItem(STORAGE_KEY_CODE, on ? 'true' : 'false');
-                    console.log(LOG, 'code RTL:', on ? 'ON' : 'OFF');
-                    if (on) scanCode(); else clearAllCodeManaged();
-                }
-            );
-            codeLi.appendChild(codeBtn);
-            firstLi.insertAdjacentElement('afterend', codeLi);
-            firstLi = codeLi;
-        } else {
-            firstLi = document.getElementById(CODE_BTN_ID).closest('li.action-item') || firstLi;
-        }
-
-        if (!document.getElementById(PLAN_BTN_ID)) {
-            var planLi = document.createElement('li');
-            planLi.className = 'action-item';
-            planLi.setAttribute('role', 'presentation');
-            var planBtn = createToolbarButton(
-                PLAN_BTN_ID, 'codicon codicon-checklist',
-                'Toggle RTL for Plan details page',
-                'cursor-rtl-plan-active', isPlanRtlActive,
-                function(e) {
-                    e.preventDefault();
-                    var on = document.body.classList.toggle(BODY_CLASS_PLAN);
-                    planBtn.classList.toggle('cursor-rtl-plan-active', on);
-                    localStorage.setItem(STORAGE_KEY_PLAN, on ? 'true' : 'false');
-                    console.log(LOG, 'plan RTL:', on ? 'ON' : 'OFF');
-                    if (on) {
-                        bindPlanWatchers();
-                        scanPlan();
-                    } else {
-                        stopPlanWatchers();
-                        clearAllPlanManaged();
-                    }
-                }
-            );
-            planLi.appendChild(planBtn);
-            firstLi.insertAdjacentElement('afterend', planLi);
-            if (isPlanRtlActive()) bindPlanWatchers();
-        }
+    function anyRtlOn() {
+        return isRtlActive() || isCodeRtlActive() || isPlanRtlActive();
     }
 
     var scanTimer = null;
@@ -570,8 +756,11 @@
         scanTimer = setTimeout(function() {
             scanTimer = null;
             tryInsertButtons();
-            scan();
-        }, 100);
+            if (anyRtlOn()) {
+                scan();
+                if (isPlanRtlActive()) scanPlan();
+            }
+        }, 250);
     }
 
     var observedRoots = (typeof WeakSet === 'function') ? new WeakSet() : null;
@@ -582,8 +771,9 @@
             if (observedRoots.has(root)) return;
             observedRoots.add(root);
         }
+        /* childList only — characterData caused scroll thrash even with toggles OFF */
         new MutationObserver(scheduleScan).observe(root, {
-            childList: true, subtree: true, characterData: true
+            childList: true, subtree: true
         });
     }
 
@@ -598,12 +788,26 @@
         console.log(LOG, 'started — by ALI FATHNEJAT');
         applyBodyClassesFromStorage();
         bindInputHandlers();
-        if (isPlanRtlActive()) bindPlanWatchers();
+        removeWrongHostButtons();
         tryInsertButtons();
-        scan();
+        if (anyRtlOn()) {
+            scan();
+            if (isPlanRtlActive()) scanPlan();
+        } else {
+            clearAllManaged();
+            clearAllCodeManaged();
+            clearAllPlanManaged();
+        }
+        /* purge any RTL marks that leaked into MD preview / editors */
+        var leaked = document.querySelectorAll('.editor-group-container [' + MARK_ATTR + '], .monaco-editor [' + MARK_ATTR + '], .webview [' + MARK_ATTR + ']');
+        for (var li = 0; li < leaked.length; li++) unmark(leaked[li]);
         attachObserver(document.body);
         discoverShadowRoots();
-        setInterval(discoverShadowRoots, 5000);
+        setInterval(discoverShadowRoots, 8000);
+        setInterval(function() {
+            removeWrongHostButtons();
+            tryInsertButtons();
+        }, 2000);
     }
 
     if (document.readyState !== 'loading') start();

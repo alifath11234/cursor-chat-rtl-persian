@@ -1,11 +1,14 @@
-﻿/* === CURSOR-CHAT-RTL-START === */
+/* === CURSOR-CHAT-RTL-START === */
 /* RTL-MODE: active */
-/* RTL-VERSION: 1.2.3-alifath */
+/* RTL-VERSION: 1.2.8-alifath */
 /* By ALI FATHNEJAT — fork of yechielby/cursor-chat-rtl-extension */
 
 /* ==========================================
-   Toolbar toggle buttons
+   Toolbar toggle buttons (IDE + Agent Mode)
    ========================================== */
+.cursor-rtl-toggle-btn,
+.cursor-rtl-code-toggle-btn,
+.cursor-rtl-plan-toggle-btn,
 #cursor-rtl-toggle-btn,
 #cursor-rtl-code-toggle-btn,
 #cursor-rtl-plan-toggle-btn {
@@ -13,6 +16,7 @@
     font-weight: bold !important;
     width: 28px;
     height: 28px;
+    min-width: 28px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -21,16 +25,31 @@
     opacity: 0.5;
     transition: opacity 0.2s, background 0.2s;
     flex-shrink: 0;
-    display: flex !important;
+    display: inline-flex !important;
     align-items: center;
     justify-content: center;
     text-decoration: none !important;
+    margin: 0 1px;
+    line-height: 1 !important;
+    box-sizing: border-box;
+    /* Electron titlebar drag blocks clicks without this */
+    -webkit-app-region: no-drag !important;
+    app-region: no-drag !important;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 100001;
 }
 
+.cursor-rtl-toggle-btn:hover,
+.cursor-rtl-code-toggle-btn:hover,
+.cursor-rtl-plan-toggle-btn:hover,
 #cursor-rtl-toggle-btn:hover,
 #cursor-rtl-code-toggle-btn:hover,
 #cursor-rtl-plan-toggle-btn:hover { opacity: 1; }
 
+.cursor-rtl-toggle-btn.cursor-rtl-active,
+.cursor-rtl-code-toggle-btn.cursor-rtl-code-active,
+.cursor-rtl-plan-toggle-btn.cursor-rtl-plan-active,
 #cursor-rtl-toggle-btn.cursor-rtl-active,
 #cursor-rtl-code-toggle-btn.cursor-rtl-code-active,
 #cursor-rtl-plan-toggle-btn.cursor-rtl-plan-active {
@@ -38,9 +57,74 @@
     background: var(--vscode-button-background, rgba(128, 128, 128, 0.3));
 }
 
-#cursor-rtl-code-toggle-btn.codicon::before,
-#cursor-rtl-plan-toggle-btn.codicon::before {
+.cursor-rtl-code-toggle-btn.codicon::before {
     font-size: 16px !important;
+}
+
+/* Plan toggle = letter P */
+.cursor-rtl-plan-toggle-btn.cursor-rtl-plan-letter {
+    font-family: var(--monaco-monospace-font, Consolas, "Courier New", monospace) !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0;
+}
+
+/* Agent Mode sticky title / Glass Agents Window header */
+.composer-sticky-title__actions .cursor-rtl-toggle-btn,
+.composer-sticky-title__actions .cursor-rtl-code-toggle-btn,
+.composer-sticky-title__actions .cursor-rtl-plan-toggle-btn,
+.glass-agent-conversation-tiling__header-actions .cursor-rtl-toggle-btn,
+.glass-agent-conversation-tiling__header-actions .cursor-rtl-code-toggle-btn,
+.glass-agent-conversation-tiling__header-actions .cursor-rtl-plan-toggle-btn,
+.glass-agent-conversation-tiling__header-actions-persistent .cursor-rtl-toggle-btn,
+.glass-agent-conversation-tiling__header-actions-persistent .cursor-rtl-code-toggle-btn,
+.glass-agent-conversation-tiling__header-actions-persistent .cursor-rtl-plan-toggle-btn,
+.auxiliary-bar-title--agent-mode .title-actions .cursor-rtl-toggle-btn,
+.auxiliary-bar-title--agent-mode .title-actions .cursor-rtl-code-toggle-btn,
+.auxiliary-bar-title--agent-mode .title-actions .cursor-rtl-plan-toggle-btn {
+    opacity: 0.7;
+}
+
+/* RTL bar beside IDE button (preferred) */
+#cursor-rtl-glass-bar,
+#cursor-rtl-glass-bar.cursor-rtl-glass-bar--beside-ide {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 2px;
+    position: static !important;
+    margin: 0 6px 0 0;
+    padding: 2px 4px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    z-index: 100001 !important;
+    -webkit-app-region: no-drag !important;
+    app-region: no-drag !important;
+    pointer-events: auto !important;
+    flex-shrink: 0;
+    vertical-align: middle;
+}
+
+/* Floating only while IDE CTA is missing */
+#cursor-rtl-glass-bar.cursor-rtl-glass-bar--floating {
+    position: fixed !important;
+    top: 12px;
+    right: 80px;
+    margin: 0;
+    padding: 4px 6px;
+    background: var(--vscode-editorWidget-background, #252526);
+    border: 1px solid var(--vscode-editorWidget-border, rgba(255,255,255,0.12));
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    z-index: 2147483000 !important;
+}
+
+#cursor-rtl-glass-bar .cursor-rtl-toggle-btn,
+#cursor-rtl-glass-bar .cursor-rtl-code-toggle-btn,
+#cursor-rtl-glass-bar .cursor-rtl-plan-toggle-btn {
+    -webkit-app-region: no-drag !important;
+    app-region: no-drag !important;
+    pointer-events: auto !important;
 }
 
 /* ==========================================
@@ -84,10 +168,10 @@ body.cursor-chat-rtl [data-cursor-rtl][dir="rtl"] {
 
 body.cursor-chat-rtl ul[data-cursor-rtl][dir="rtl"],
 body.cursor-chat-rtl ol[data-cursor-rtl][dir="rtl"],
-body.cursor-chat-rtl .markdown-lexical-editor-container ul,
-body.cursor-chat-rtl .markdown-lexical-editor-container ol,
-body.cursor-chat-rtl .markdown-section ul,
-body.cursor-chat-rtl .markdown-section ol {
+body.cursor-chat-rtl .composer-rendered-message .markdown-lexical-editor-container ul,
+body.cursor-chat-rtl .composer-rendered-message .markdown-lexical-editor-container ol,
+body.cursor-chat-rtl .composer-rendered-message .markdown-section ul,
+body.cursor-chat-rtl .composer-rendered-message .markdown-section ol {
     padding-inline-start: 22px !important;
     padding-inline-end: 0 !important;
 }
@@ -178,13 +262,13 @@ body.cursor-chat-rtl .full-input-box .aislash-editor-placeholder {
 body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .monaco-editor,
 body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message pre,
 body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .markdown-lexical-editor-code-block,
-body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-code-block-container,
-body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .markdown-code-outer-container,
-body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .cursor-code-block-content,
-body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-message-codeblock,
-body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-diff-block,
-body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-terminal-output,
-body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .xterm {
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .composer-code-block-container,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .markdown-code-outer-container,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .cursor-code-block-content,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .composer-message-codeblock,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .composer-diff-block,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .composer-terminal-output,
+body.cursor-chat-rtl:not(.cursor-chat-rtl-code) .composer-rendered-message .xterm {
     direction: ltr !important;
     text-align: left !important;
 }
@@ -229,6 +313,113 @@ body.cursor-chat-rtl-code .composer-message-codeblock[data-cursor-rtl-code] {
 body.cursor-chat-rtl-code .composer-rendered-message pre[data-cursor-rtl-code] code {
     direction: inherit !important;
     text-align: inherit !important;
+}
+
+
+/* ==========================================
+   Chat + MD RTL restore (CSS-first, Glass-safe)
+   ========================================== */
+body.cursor-chat-rtl :is(
+    .composer-rendered-message,
+    .composer-human-message,
+    .composer-human-message-container,
+    .agent-conversations,
+    .agent-conversation-tiling__tile,
+    .glass-agent-conversation-tiling__tile
+) {
+    direction: rtl !important;
+    unicode-bidi: isolate !important;
+}
+
+body.cursor-chat-rtl :is(
+    .composer-rendered-message,
+    .composer-human-message,
+    .composer-human-message-container,
+    .agent-conversations,
+    .agent-conversation-tiling__tile,
+    .glass-agent-conversation-tiling__tile
+) :is(p, div, li, h1, h2, h3, h4, h5, h6, blockquote, td, th, span) {
+    unicode-bidi: isolate !important;
+}
+
+body.cursor-chat-rtl :is(
+    .composer-rendered-message,
+    .composer-human-message,
+    .agent-conversations,
+    .agent-conversation-tiling__tile,
+    .glass-agent-conversation-tiling__tile
+) :is(p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th) {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+body.cursor-chat-rtl :is(
+    .composer-rendered-message,
+    .composer-human-message,
+    .agent-conversations,
+    .agent-conversation-tiling__tile,
+    .glass-agent-conversation-tiling__tile
+) :is(.markdown-lexical-editor-container, .markdown-section, .markdown-root),
+body.cursor-chat-rtl :is(
+    .composer-rendered-message,
+    .composer-human-message,
+    .agent-conversations,
+    .agent-conversation-tiling__tile,
+    .glass-agent-conversation-tiling__tile
+) :is(.markdown-lexical-editor-container, .markdown-section, .markdown-root)[dir="ltr"],
+body.cursor-chat-rtl :is(
+    .composer-rendered-message,
+    .composer-human-message,
+    .agent-conversations,
+    .agent-conversation-tiling__tile,
+    .glass-agent-conversation-tiling__tile
+) :is(.markdown-lexical-editor-container, .markdown-section) [dir="ltr"]:not(.monaco-editor):not(pre):not(code) {
+    direction: rtl !important;
+    unicode-bidi: isolate !important;
+    text-align: right !important;
+}
+
+body.cursor-chat-rtl :is(
+    .composer-rendered-message,
+    .composer-human-message,
+    .agent-conversations,
+    .agent-conversation-tiling__tile,
+    .glass-agent-conversation-tiling__tile
+) :is(ul, ol) {
+    padding-inline-start: 22px !important;
+    padding-inline-end: 0 !important;
+}
+
+body.cursor-chat-rtl :is(
+    .composer-rendered-message,
+    .composer-human-message,
+    .agent-conversations,
+    .agent-conversation-tiling__tile,
+    .glass-agent-conversation-tiling__tile
+) :is(code, pre, .monaco-editor, .markdown-lexical-editor-code-block, .composer-code-block-container) {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: isolate !important;
+}
+
+/* MD file Preview — CSS only (no JS dir mutation = no scroll jump) */
+body.cursor-chat-rtl .editor-group-container :is(.markdown-lexical-editor-container, .markdown-section, .markdown-root) {
+    direction: rtl !important;
+    unicode-bidi: isolate !important;
+}
+body.cursor-chat-rtl .editor-group-container :is(.markdown-lexical-editor-container, .markdown-section, .markdown-root) :is(p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th) {
+    direction: rtl !important;
+    text-align: right !important;
+    unicode-bidi: isolate !important;
+}
+body.cursor-chat-rtl .editor-group-container :is(.markdown-lexical-editor-container, .markdown-section) :is(ul, ol) {
+    padding-inline-start: 22px !important;
+    padding-inline-end: 0 !important;
+}
+body.cursor-chat-rtl .editor-group-container :is(code, pre, .monaco-editor) {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: isolate !important;
 }
 
 /* Plan — IDE (.plan-editor) + Agent Mode (.ui-plan-editor) + inline plan */

@@ -3,7 +3,7 @@ chcp 65001 >nul
 title Cursor RTL Persian - Apply Patch
 echo.
 echo ============================================
-echo   Cursor RTL Persian - Apply Patch v1.1.0
+echo   Cursor RTL Persian - Apply Patch v1.2.8
 echo ============================================
 echo.
 echo Cursor MUST be fully closed before continuing.
