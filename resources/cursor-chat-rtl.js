@@ -1,5 +1,5 @@
 /* === CURSOR-CHAT-RTL-JS active === */
-/* v1.2.8 - buttons beside IDE CTA; restore chat/MD RTL via CSS-first */
+/* v1.2.9 - RTL for questionnaire box, answered question card, and Side Chat transcript rows (CSS-only) */
 (function() {
     var BTN_CLASS = 'cursor-rtl-toggle-btn';
     var CODE_BTN_CLASS = 'cursor-rtl-code-toggle-btn';
@@ -16,7 +16,7 @@
     var MARK_CODE_ATTR = 'data-cursor-rtl-code';
     var MARK_PLAN_ATTR = 'data-cursor-rtl-plan';
     var RLM_ATTR = 'data-cursor-rtl-rlm';
-    var LOG = '[Cursor RTL v1.2.8]';
+    var LOG = '[Cursor RTL v1.2.9]';
     var RLM = '\u200F';
     var LTR_LEAD = /^[\s]*[A-Za-z@#]/;
 

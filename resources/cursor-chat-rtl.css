@@ -1,6 +1,6 @@
 /* === CURSOR-CHAT-RTL-START === */
 /* RTL-MODE: active */
-/* RTL-VERSION: 1.2.8-alifath */
+/* RTL-VERSION: 1.2.9-alifath */
 /* By ALI FATHNEJAT — fork of yechielby/cursor-chat-rtl-extension */
 
 /* ==========================================
@@ -399,6 +399,73 @@ body.cursor-chat-rtl :is(
 ) :is(code, pre, .monaco-editor, .markdown-lexical-editor-code-block, .composer-code-block-container) {
     direction: ltr !important;
     text-align: left !important;
+    unicode-bidi: isolate !important;
+}
+
+/* ==========================================
+   Agent transcript rows (Side Chat + new chat renderer)
+   Row containers keep their layout direction so opposed
+   human bubbles and turn actions stay where Cursor puts them.
+   ========================================== */
+body.cursor-chat-rtl :is(.agent-transcript-row-markdown, .agent-transcript-row-human, .ui-agent-transcript-human-bubble, .agent-transcript-ask-question-card) :is(p, li, h1, h2, h3, h4, h5, h6, blockquote, td, th),
+body.cursor-chat-rtl :is(.agent-transcript-row-markdown, .agent-transcript-row-human) :is(.markdown-lexical-editor-container, .markdown-section, .markdown-root, .ProseMirror),
+body.cursor-chat-rtl :is(.agent-transcript-row-markdown, .agent-transcript-row-human) :is(.markdown-lexical-editor-container, .markdown-section, .markdown-root) [dir="ltr"]:not(.monaco-editor):not(pre):not(code),
+body.cursor-chat-rtl .ui-agent-transcript-human-bubble {
+    direction: rtl !important;
+    unicode-bidi: isolate !important;
+    text-align: right !important;
+}
+
+body.cursor-chat-rtl :is(.agent-transcript-row-markdown, .agent-transcript-row-human, .agent-transcript-ask-question-card) :is(ul, ol) {
+    direction: rtl !important;
+    padding-inline-start: 22px !important;
+    padding-inline-end: 0 !important;
+}
+
+body.cursor-chat-rtl :is(.agent-transcript-row-markdown, .agent-transcript-row-human) table {
+    direction: rtl !important;
+}
+
+body.cursor-chat-rtl :is(.agent-transcript-row-markdown, .agent-transcript-row-human, .ui-agent-transcript-human-bubble, .agent-transcript-ask-question-card) :is(code, pre, .monaco-editor, .markdown-lexical-editor-code-block, .composer-code-block-container, .markdown-code-outer-container, .xterm) {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: isolate !important;
+}
+
+/* Answered question card in the transcript */
+body.cursor-chat-rtl .agent-transcript-ask-question-card {
+    direction: rtl !important;
+    text-align: right !important;
+}
+
+/* ==========================================
+   Questionnaire box above the prompt input (AskQuestion)
+   Header, stepper and action buttons stay LTR.
+   ========================================== */
+body.cursor-chat-rtl .composer-questionnaire-toolbar-questions,
+body.cursor-chat-rtl .composer-questionnaire-toolbar-question,
+body.cursor-chat-rtl .composer-questionnaire-toolbar-options,
+body.cursor-chat-rtl .composer-questionnaire-toolbar-option {
+    direction: rtl !important;
+}
+
+body.cursor-chat-rtl .composer-questionnaire-toolbar-question-label,
+body.cursor-chat-rtl .composer-questionnaire-toolbar-option-label,
+body.cursor-chat-rtl .composer-questionnaire-toolbar-freeform-input,
+body.cursor-chat-rtl .composer-questionnaire-toolbar-freeform-input :is(p, [contenteditable="true"]),
+body.cursor-chat-rtl .composer-questionnaire-toolbar-answered-hint {
+    direction: rtl !important;
+    unicode-bidi: isolate !important;
+    text-align: right !important;
+}
+
+body.cursor-chat-rtl .composer-questionnaire-toolbar-question-number,
+body.cursor-chat-rtl .composer-questionnaire-toolbar-option-letter {
+    unicode-bidi: isolate !important;
+}
+
+body.cursor-chat-rtl :is(.composer-questionnaire-toolbar-question-label, .composer-questionnaire-toolbar-option-label) code {
+    direction: ltr !important;
     unicode-bidi: isolate !important;
 }
 

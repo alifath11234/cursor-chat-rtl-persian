@@ -6,6 +6,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.2.9] — 2026-10-12
+
+### Fixed
+- **Questionnaire box (AskQuestion)** — question labels, option labels, and the free-form answer field are now RTL (`.composer-questionnaire-toolbar-*`); header, stepper, and action buttons keep their layout
+- **Answered question card** in the transcript (`.agent-transcript-ask-question-card`) is now RTL
+- **Side Chat** — messages rendered by the new transcript renderer (`.agent-transcript-row-markdown`, `.agent-transcript-row-human`, `.ui-agent-transcript-human-bubble`) are now RTL; code blocks stay LTR
+- CSS-only change: no new DOM mutation or scroll listeners
+
+---
+
 ## [1.2.8] — 2026-07-29
 
 ### Fixed

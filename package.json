@@ -2,7 +2,7 @@
   "name": "cursor-chat-rtl-persian",
   "displayName": "Cursor Chat RTL — Persian",
   "description": "RTL support for Cursor Agent chat and Plan details (Persian, Arabic, Hebrew). Three toolbar toggles: text, code blocks, plan page. Patches Cursor workbench.",
-  "version": "1.2.8",
+  "version": "1.2.9",
   "publisher": "alifath",
   "author": {
     "name": "ALI FATHNEJAT",
