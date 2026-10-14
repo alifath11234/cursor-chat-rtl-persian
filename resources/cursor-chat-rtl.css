@@ -1,6 +1,6 @@
 /* === CURSOR-CHAT-RTL-START === */
 /* RTL-MODE: active */
-/* RTL-VERSION: 1.2.9-alifath */
+/* RTL-VERSION: 1.2.10-alifath */
 /* By ALI FATHNEJAT — fork of yechielby/cursor-chat-rtl-extension */
 
 /* ==========================================
@@ -433,9 +433,38 @@ body.cursor-chat-rtl :is(.agent-transcript-row-markdown, .agent-transcript-row-h
 }
 
 /* Answered question card in the transcript */
-body.cursor-chat-rtl .agent-transcript-ask-question-card {
+body.cursor-chat-rtl .agent-transcript-ask-question-card,
+body.cursor-chat-rtl .agent-transcript-ask-question-card :is(div, p, li),
+body.cursor-chat-rtl .agent-transcript-ask-question-card [dir="ltr"]:not(code):not(pre) {
     direction: rtl !important;
+    unicode-bidi: isolate !important;
     text-align: right !important;
+}
+
+/* ==========================================
+   Agents Window questionnaire (Glass Tray)
+   Header (title, stepper, collapse) and footer (Skip / Next) keep LTR.
+   ========================================== */
+body.cursor-chat-rtl .glass-questionnaire-tray :is(.ui-tray-step__options, .ui-tray-option) {
+    direction: rtl !important;
+}
+
+body.cursor-chat-rtl .glass-questionnaire-tray :is(.ui-tray-step__title, .ui-tray-step__header, .ui-tray-option__content, .ui-tray-option__label, .ui-tray-option__description, .ui-tray-option__children, .ui-tray-option__input),
+body.cursor-chat-rtl .glass-questionnaire-tray :is(.ui-tray-step__title, .ui-tray-option__label, .ui-tray-option__description) :is(p, div, li),
+body.cursor-chat-rtl .glass-questionnaire-tray .ui-tray-option__input :is(p, .ProseMirror, [contenteditable="true"], textarea),
+body.cursor-chat-rtl .glass-questionnaire-tray :is(.ui-tray-step__title, .ui-tray-option__label, .ui-tray-option__description, .ui-tray-option__input) [dir="ltr"]:not(code):not(pre) {
+    direction: rtl !important;
+    unicode-bidi: isolate !important;
+    text-align: right !important;
+}
+
+body.cursor-chat-rtl .glass-questionnaire-tray .ui-tray-option__badge {
+    unicode-bidi: isolate !important;
+}
+
+body.cursor-chat-rtl .glass-questionnaire-tray :is(.ui-tray-step__title, .ui-tray-option__label, .ui-tray-option__description) :is(code, pre) {
+    direction: ltr !important;
+    unicode-bidi: isolate !important;
 }
 
 /* ==========================================

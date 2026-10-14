@@ -6,6 +6,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.2.10] — 2026-10-14
+
+### Fixed
+- **Agents Window questionnaire** — Cursor 3.24 renders AskQuestion in the Glass Tray (`.glass-questionnaire-tray`, `.ui-tray-step__title`, `.ui-tray-option*`), not `.composer-questionnaire-toolbar`. Question text, option labels, and the "Other" input are now RTL with correct mixed Persian/English order; header, stepper, and Skip/Next keep their layout
+- **Answered question card** — nested `div`s and `[dir="ltr"]` inside `.agent-transcript-ask-question-card` are now RTL + isolated, fixing left alignment and scrambled mixed Persian/English order
+
+---
+
 ## [1.2.9] — 2026-10-12
 
 ### Fixed
