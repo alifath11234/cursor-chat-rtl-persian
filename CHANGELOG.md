@@ -6,6 +6,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.2.11] — 2026-10-14
+
+### Fixed
+- **Answered question card in Agents Window** — the card is rendered with `data-testid="agent-transcript-ask-question-card"` (no class), so the v1.2.10 class selector never matched. Card, prompt, and answer are now RTL with correct mixed Persian/English order; code stays LTR
+
+---
+
 ## [1.2.10] — 2026-10-14
 
 ### Fixed

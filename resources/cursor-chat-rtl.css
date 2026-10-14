@@ -1,6 +1,6 @@
 /* === CURSOR-CHAT-RTL-START === */
 /* RTL-MODE: active */
-/* RTL-VERSION: 1.2.10-alifath */
+/* RTL-VERSION: 1.2.11-alifath */
 /* By ALI FATHNEJAT — fork of yechielby/cursor-chat-rtl-extension */
 
 /* ==========================================
@@ -432,13 +432,20 @@ body.cursor-chat-rtl :is(.agent-transcript-row-markdown, .agent-transcript-row-h
     unicode-bidi: isolate !important;
 }
 
-/* Answered question card in the transcript */
-body.cursor-chat-rtl .agent-transcript-ask-question-card,
-body.cursor-chat-rtl .agent-transcript-ask-question-card :is(div, p, li),
-body.cursor-chat-rtl .agent-transcript-ask-question-card [dir="ltr"]:not(code):not(pre) {
+/* Answered question card in the transcript.
+   Agents Window renders it with data-testid only (no class). */
+body.cursor-chat-rtl :is(.agent-transcript-ask-question-card, [data-testid="agent-transcript-ask-question-card"]),
+body.cursor-chat-rtl :is(.agent-transcript-ask-question-card, [data-testid="agent-transcript-ask-question-card"]) :is(div, p, li, span),
+body.cursor-chat-rtl :is(.agent-transcript-ask-question-card, [data-testid="agent-transcript-ask-question-card"]) [dir="ltr"]:not(code):not(pre) {
     direction: rtl !important;
     unicode-bidi: isolate !important;
     text-align: right !important;
+}
+
+body.cursor-chat-rtl [data-testid="agent-transcript-ask-question-card"] :is(code, pre) {
+    direction: ltr !important;
+    text-align: left !important;
+    unicode-bidi: isolate !important;
 }
 
 /* ==========================================

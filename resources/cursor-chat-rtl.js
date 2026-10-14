@@ -1,5 +1,5 @@
 /* === CURSOR-CHAT-RTL-JS active === */
-/* v1.2.10 - RTL for Agents Window questionnaire tray and answered question card (CSS-only) */
+/* v1.2.11 - RTL for Agents Window answered question card (data-testid) (CSS-only) */
 (function() {
     var BTN_CLASS = 'cursor-rtl-toggle-btn';
     var CODE_BTN_CLASS = 'cursor-rtl-code-toggle-btn';
@@ -16,7 +16,7 @@
     var MARK_CODE_ATTR = 'data-cursor-rtl-code';
     var MARK_PLAN_ATTR = 'data-cursor-rtl-plan';
     var RLM_ATTR = 'data-cursor-rtl-rlm';
-    var LOG = '[Cursor RTL v1.2.10]';
+    var LOG = '[Cursor RTL v1.2.11]';
     var RLM = '\u200F';
     var LTR_LEAD = /^[\s]*[A-Za-z@#]/;
 
